@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Diagnóstico de tu voz | Willie Inspired</title>
+    <meta name="description" content="Responde 4 preguntas y mira qué le falta a tu voz para encajar en el beat. Te regalo un preset gratis.">
+    <meta name="robots" content="noindex">
+    <link rel="icon" type="image/x-icon" href="/willieimages/favicon.ico">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link rel="stylesheet" href="/willieinspired/assets/store.css?v=5">
+    <style>
+        /* ── Diagnóstico de voz · selección estilo Duolingo + Apple ───────────────── */
+        body.dx-run { overflow: hidden; }
+        body.dx-run .wi-announce, body.dx-run .wi-header, body.dx-run .wi-footer, body.dx-run .wi-wa { display: none !important; }
+        body:not(.dx-run) .dx { display: none; }
+        body.dx-run #result { display: none; }
+
+        .dx { position: fixed; inset: 0; z-index: 900; background: var(--bg); background-image: var(--noise); display: flex; flex-direction: column; }
+        .dx-top { display: flex; align-items: center; gap: 14px; padding: calc(14px + env(safe-area-inset-top)) var(--gutter) 10px; max-width: 760px; width: 100%; margin: 0 auto; }
+        .dx-x { width: 40px; height: 40px; flex: none; border-radius: 50%; display: grid; place-items: center; color: var(--subtle); font-size: 1.25rem; transition: color .15s, background-color .15s; }
+        .dx-x:hover { color: var(--ink); background: var(--soft); }
+        .dx-x[hidden] { visibility: hidden; display: grid; }
+        .dx-bar { flex: 1; height: 16px; border-radius: 999px; background: var(--soft); overflow: hidden; position: relative; }
+        .dx-bar i { position: absolute; inset: 0; border-radius: 999px; background: var(--accent); transform-origin: left center; transform: scaleX(0); transition: transform .5s var(--ease); will-change: transform; }
+        .dx-bar i::after { content: ""; position: absolute; left: 10px; right: 10px; top: 4px; height: 4px; border-radius: 4px; background: rgba(255,255,255,.35); }
+        .dx-main { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; overscroll-behavior: contain; }
+        .dx-stage { max-width: 760px; margin: 0 auto; padding: 18px var(--gutter) 40px; }
+
+        .dx-step { animation: dxIn .38s var(--ease) both; }
+        @keyframes dxIn { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
+
+        .dx-q { font-size: clamp(1.55rem, 4.6vw, 2.2rem); font-weight: 900; letter-spacing: -.035em; line-height: 1.1; }
+        .dx-hint { margin-top: 8px; color: var(--muted); font-size: .98rem; }
+        .dx-opts { display: grid; gap: 12px; margin-top: 24px; }
+
+        /* Tarjeta con «suelo»: se hunde al tocarla */
+        .dx-opt { position: relative; display: flex; align-items: center; gap: 14px; width: 100%; text-align: left; padding: 15px 16px; border-radius: 18px; background: var(--surface); border: 2px solid var(--line-strong); box-shadow: 0 4px 0 var(--line-strong); font-size: 1.02rem; font-weight: 700; color: var(--ink); cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action: manipulation; transition: transform .1s var(--ease), box-shadow .1s var(--ease), border-color .18s, background-color .18s; }
+        .dx-opt:active { transform: translateY(4px); box-shadow: 0 0 0 var(--line-strong); }
+        .dx-ico { width: 44px; height: 44px; flex: none; border-radius: 14px; display: grid; place-items: center; font-size: 1.3rem; background: var(--soft); color: var(--muted); transition: background-color .18s, color .18s; }
+        .dx-txt { flex: 1; min-width: 0; line-height: 1.25; }
+        .dx-txt small { display: block; margin-top: 3px; font-size: .84rem; font-weight: 500; color: var(--muted); }
+        .dx-key { flex: none; width: 26px; height: 26px; border-radius: 8px; border: 2px solid var(--line-strong); display: none; place-items: center; font-size: .74rem; font-weight: 800; color: var(--subtle); }
+        @media (hover: hover) and (min-width: 700px) { .dx-key { display: grid; } .dx-opt:hover { border-color: var(--ink); } }
+        .dx-check { position: absolute; right: 14px; top: 50%; width: 26px; height: 26px; margin-top: -13px; border-radius: 50%; background: var(--accent); color: #fff; display: grid; place-items: center; font-size: .95rem; transform: scale(0); transition: transform .38s cubic-bezier(.34, 1.56, .64, 1); }
+        .dx-opt[aria-checked="true"] { border-color: var(--accent); background: var(--accent-soft); box-shadow: 0 4px 0 var(--accent); }
+        .dx-opt[aria-checked="true"]:active { box-shadow: 0 0 0 var(--accent); }
+        .dx-opt[aria-checked="true"] .dx-ico { background: var(--accent); color: #fff; }
+        .dx-opt[aria-checked="true"] .dx-check { transform: scale(1); }
+        .dx-opt[aria-checked="true"] .dx-key { visibility: hidden; }
+        .dx-opt:focus-visible, .dx-go:focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; }
+
+        /* Barra inferior fija */
+        .dx-foot { border-top: 2px solid var(--line); background: var(--surface); padding: 14px var(--gutter) calc(14px + env(safe-area-inset-bottom)); transition: transform .3s var(--ease); }
+        .dx-foot[hidden] { display: block; transform: translateY(110%); pointer-events: none; }
+        .dx-foot-in { max-width: 760px; margin: 0 auto; display: flex; justify-content: flex-end; }
+        .dx-go { width: 100%; min-height: 56px; border-radius: 16px; background: var(--accent); color: #fff; font-weight: 900; font-size: 1.02rem; letter-spacing: .06em; text-transform: uppercase; box-shadow: 0 5px 0 var(--accent-ink); transition: transform .1s var(--ease), box-shadow .1s var(--ease), opacity .2s, background-color .2s; }
+        .dx-go:active:not([disabled]) { transform: translateY(5px); box-shadow: 0 0 0 var(--accent-ink); }
+        .dx-go[disabled] { background: var(--soft); color: var(--subtle); box-shadow: 0 5px 0 var(--line); cursor: not-allowed; }
+        @media (min-width: 700px) { .dx-go { width: auto; min-width: 240px; } }
+
+        /* Intro, carga y regalo */
+        .dx-center { text-align: center; padding-top: clamp(8px, 4vh, 40px); }
+        .dx-center .wi-h1 { font-size: clamp(2.2rem, 8vw, 3.8rem); margin-top: 14px; }
+        .dx-center .wi-lead { margin: 16px auto 0; }
+        .dx-center .dx-go { margin-top: 28px; max-width: 420px; }
+        .dx-list { display: grid; gap: 10px; margin: 26px auto 0; max-width: 420px; text-align: left; }
+        .dx-list div { display: flex; gap: 12px; align-items: center; font-weight: 600; }
+        .dx-list i { color: var(--accent-ink); font-size: 1.2rem; }
+        .dx-ring { width: 74px; height: 74px; margin: 40px auto 22px; border-radius: 50%; border: 7px solid var(--soft); border-top-color: var(--accent); animation: dxSpin .9s linear infinite; }
+        @keyframes dxSpin { to { transform: rotate(360deg); } }
+        .dx-form { display: grid; gap: 12px; max-width: 440px; margin: 24px auto 0; }
+        .dx-input { width: 100%; min-height: 56px; padding: 0 18px; border-radius: 16px; border: 2px solid var(--line-strong); background: var(--surface); color: var(--ink); font-size: 16px; font-weight: 600; box-shadow: 0 4px 0 var(--line-strong); }
+        .dx-input:focus { outline: none; border-color: var(--accent); box-shadow: 0 4px 0 var(--accent); }
+        .dx-skip { margin-top: 6px; font-weight: 700; color: var(--muted); text-decoration: underline; text-underline-offset: 4px; padding: 10px; }
+        .dx-msg { min-height: 1.2em; font-size: .9rem; font-weight: 600; color: var(--warn); }
+        .dx-msg.is-ok { color: var(--success); }
+        .dx-hp { position: absolute; left: -9999px; width: 1px; height: 1px; opacity: 0; }
+
+        /* Resultado */
+        .dx-res { padding-top: clamp(28px, 6vw, 64px); }
+        .dx-grid { display: grid; gap: 14px; }
+        .dx-road { display: grid; gap: 12px; margin-top: 22px; }
+        .dx-road li { list-style: none; display: flex; gap: 14px; align-items: flex-start; padding: 16px; border-radius: 18px; background: var(--surface); border: 1px solid var(--line); }
+        .dx-n { flex: none; width: 36px; height: 36px; border-radius: 50%; background: var(--ink); color: var(--on-ink); display: grid; place-items: center; font-weight: 900; }
+        .dx-road b { display: block; font-size: 1.02rem; letter-spacing: -.01em; }
+        .dx-road p { margin-top: 3px; color: var(--muted); font-size: .94rem; }
+        .dx-prod { display: flex; gap: 14px; align-items: center; padding: 14px; border-radius: 18px; background: var(--surface); border: 1px solid var(--line); text-decoration: none; color: inherit; transition: transform .2s var(--ease), border-color .2s; }
+        .dx-prod:hover { border-color: var(--ink); transform: translateY(-2px); }
+        .dx-prod .dx-ph { width: 64px; height: 64px; flex: none; border-radius: 14px; overflow: hidden; background: var(--soft); display: grid; place-items: center; color: var(--subtle); font-size: 1.6rem; }
+        .dx-prod .dx-ph img { width: 100%; height: 100%; object-fit: cover; }
+        .dx-prod b { display: block; }
+        .dx-prod small { display: block; color: var(--muted); margin-top: 2px; }
+        .dx-two { display: grid; gap: 14px; margin-top: 18px; }
+        @media (min-width: 760px) { .dx-two { grid-template-columns: 1fr 1fr; } .dx-grid.cols { grid-template-columns: 1fr 1fr; } }
+
+        @media (prefers-reduced-motion: reduce) {
+            .dx-step { animation: none; }
+            .dx-opt, .dx-check, .dx-go, .dx-bar i, .dx-foot, .dx-prod { transition: none; }
+            .dx-ring { animation-duration: 2.4s; }
+        }
+    </style>
+</head>
+<body class="dx-run">
+
+<!-- Flujo de preguntas (pantalla completa, sin cabecera de la tienda) -->
+<div class="dx" id="dx" role="dialog" aria-modal="true" aria-label="Diagnóstico de tu voz">
+    <div class="dx-top">
+        <a class="dx-x" id="dxX" href="/willieinspired" aria-label="Salir del diagnóstico" data-sfx="swoosh"><i class="bi bi-x-lg"></i></a>
+        <div class="dx-bar" role="progressbar" aria-label="Progreso" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" id="dxBarWrap"><i id="dxBar"></i></div>
+        <span class="dx-x" aria-hidden="true"></span>
+    </div>
+    <div class="dx-main" id="dxMain"><div class="dx-stage" id="dxStage" aria-live="polite"></div></div>
+    <div class="dx-foot" id="dxFoot" hidden><div class="dx-foot-in"><button type="button" class="dx-go" id="dxGo" data-sfx="swoosh" disabled>Continuar</button></div></div>
+</div>
+
+<!-- Resultado (con la cabecera y el pie normales de la tienda) -->
+<main id="result" class="wi-section" aria-live="polite"><div class="wi-container dx-res" id="resultBody"></div></main>
+
+<script src="/willieinspired/assets/store.js?v=14"></script>
+<script src="/willieinspired/sfx.js" defer></script>
+<script>
+(() => {
+    const $ = (s, r = document) => r.querySelector(s);
+    const sfx = (n) => { try { window.WISfx && window.WISfx.play(n); } catch (_) {} };
+    const GIFT_ID = 'lead-graba-maquetas-con-nativos';
+    const IG = 'https://ig.me/m/willieinspired';
+
+    // ── Preguntas ───────────────────────────────────────────────────────────
+    const Q = [
+        { id: 'pains', multi: true, title: '¿Qué te molesta de tu voz?', hint: 'Marca todas las que te pasen.', opts: [
+            { v: 'beat',   i: 'music-note-beamed', t: 'Mi voz no encaja en el beat', d: 'El beat la tapa o se siente separada' },
+            { v: 'aire',   i: 'wind',              t: 'Se escucha apagada, sin brillo', d: 'Le falta aire' },
+            { v: 's',      i: 'soundwave',         t: 'Las S se clavan en el oído', d: 'Suenan filosas' },
+            { v: 'comp',   i: 'graph-up',          t: 'Sube y baja de volumen', d: 'Unas palabras se pierden' },
+            { v: 'graves', i: 'speaker',           t: 'Retumba o suena embarrada', d: 'Demasiado grave en el micro' },
+            { v: 'fx',     i: 'water',             t: 'Con reverb o delay se ensucia', d: 'El efecto se come la voz' }
+        ] },
+        { id: 'nivel', title: '¿Cuánto has mezclado?', hint: 'Sin pena, aquí nadie nace sabiendo.', opts: [
+            { v: 'nunca',  i: 'emoji-smile', t: 'Nunca he mezclado', d: 'Empiezo de cero' },
+            { v: 'basico', i: 'sliders',     t: 'Sé lo básico', d: 'Muevo cosas pero no sé por qué' },
+            { v: 'pulir',  i: 'trophy',      t: 'Ya mezclo, me falta pulirla', d: 'Quiero que suene a disco' }
+        ] },
+        { id: 'plug', title: '¿Con qué plugins cuentas?', hint: 'Elige el que más se parezca.', opts: [
+            { v: 'nativos',  i: 'lightning',       t: 'Solo los nativos de tu DAW', d: 'Sin instalar nada' },
+            { v: 'terceros', i: 'boxes',           t: 'Tengo plugins de terceros', d: 'Waves, FabFilter y compañía' },
+            { v: 'nose',     i: 'question-circle', t: 'No sé cuáles usar', d: 'Me pierdo entre tantos' }
+        ] },
+        { id: 'meta', title: '¿Qué quieres lograr?', hint: 'Te recomiendo según esto.', opts: [
+            { v: 'maquetas', i: 'mic',          t: 'Grabar maquetas rápido', d: 'Oírme bien desde el primer take' },
+            { v: 'pro',      i: 'stars',        t: 'Que mi tema suene profesional', d: 'Mezcla completa, voz al frente' },
+            { v: 'hecho',    i: 'person-check', t: 'Que me lo dejen listo para mi voz', d: 'Tú me lo pruebas antes de pagar' }
+        ] }
+    ];
+    const STEPS = ['intro', 'q0', 'q1', 'q2', 'q3', 'load', 'gift'];
+    const ans = { pains: new Set(), nivel: null, plug: null, meta: null };
+    let idx = 0, catalog = null, gaveEmail = false;
+
+    // ── Ruta de mezcla según lo que marcó ───────────────────────────────────
+    const FIX = {
+        graves: { t: 'Corta lo que retumba', d: 'Filtro pasa-altos en 70 Hz. Limpia el cuarto sin quitarle cuerpo a la voz.' },
+        comp:   { t: 'Aplana los subibajas', d: 'Dos compresores suaves en vez de uno fuerte: primero −4 dB y luego −2 dB de reducción.' },
+        s:      { t: 'Baja las S', d: 'De-esser quitando de 3 a 5 dB. Solo las S, no la voz entera.' },
+        aire:   { t: 'Dale aire', d: 'Un toque de brillo en 8 kHz y 16 kHz, al final de la cadena. Poquito, que no suene a radio.' },
+        fx:     { t: 'Efectos en envíos, no en la voz', d: 'Reverb y delay van en un envío con sidechain para que se aparten cuando cantas.' },
+        beat:   { t: 'Siéntala dentro del beat', d: 'Deja la voz cerca de −6 dB en el mezclador y baja el beat hasta que no la tape.' }
+    };
+    const ORDER = ['graves', 'comp', 's', 'aire', 'fx', 'beat'];
+    const CAUSE = {
+        beat:   'Tu voz no encaja en el beat porque está peleando por el mismo espacio.',
+        aire:   'Tu voz se oye apagada porque le falta aire arriba y el beat se lo come.',
+        s:      'Tus S se clavan porque nadie las está domando.',
+        comp:   'Tu voz sube y baja porque no tiene una compresión que la sostenga.',
+        graves: 'Tu voz suena embarrada porque tiene graves de más que no deberían estar.',
+        fx:     'Tus efectos ensucian porque están encima de la voz y no en un envío.'
+    };
+    function route() {
+        const picked = ORDER.filter((k) => ans.pains.has(k));
+        const base = ['graves', 'comp', 'beat'];
+        base.forEach((k) => { if (picked.length < 3 && !picked.includes(k)) picked.push(k); });
+        return picked.slice(0, 5).map((k) => FIX[k]);
+    }
+    function recommended() {
+        if (ans.meta === 'hecho') return 'servicio-plantilla-personalizada-para-tu-voz';
+        if (ans.plug === 'nativos') return 'plantilla-grabacion-y-mezcla-profesional-con-nativos';
+        if (ans.nivel === 'nunca') return 'plugin-easy-mix';
+        return 'plantilla-grabacion-y-mezcla-profesional';
+    }
+    const WHY = {
+        'servicio-plantilla-personalizada-para-tu-voz': 'Me mandas tu voz y yo te preparo la plantilla. La escuchas antes de pagar.',
+        'plantilla-grabacion-y-mezcla-profesional-con-nativos': 'Solo usa plugins nativos de tu DAW: la abres, grabas y ya está ruteada.',
+        'plugin-easy-mix': 'Perillas con nombres que dicen lo que hacen. Para no tener que perillear plugins sin saber.',
+        'plantilla-grabacion-y-mezcla-profesional': 'La estructura con la que mezclo a mis clientes, con los plugins necesarios incluidos.'
+    };
+
+    // ── Render ──────────────────────────────────────────────────────────────
+    const stage = $('#dxStage'), main = $('#dxMain'), foot = $('#dxFoot'), go = $('#dxGo'), bar = $('#dxBar'), xBtn = $('#dxX');
+    const esc = (s) => WI.esc(s);
+    function mount(html) {
+        const el = document.createElement('div');
+        el.className = 'dx-step';
+        el.innerHTML = html;
+        stage.replaceChildren(el);
+        main.scrollTop = 0;
+        return el;
+    }
+    function setBar(p) { bar.style.transform = `scaleX(${p})`; $('#dxBarWrap').setAttribute('aria-valuenow', Math.round(p * 100)); }
+    function canGo() {
+        const q = Q[idx - 1];
+        if (!q) return true;
+        return q.multi ? ans[q.id].size > 0 : !!ans[q.id];
+    }
+    function refreshGo() { go.disabled = !canGo(); }
+    function isOn(q, v) { return q.multi ? ans[q.id].has(v) : ans[q.id] === v; }
+
+    function render() {
+        const s = STEPS[idx];
+        foot.hidden = !s.startsWith('q');
+        if (s === 'intro') {
+            setBar(0);
+            mount(`<div class="dx-center">
+                <span class="wi-badge wi-badge--accent">Gratis · 1 minuto</span>
+                <h1 class="wi-h1">No culpes al micrófono.</h1>
+                <p class="wi-lead">Mismo micro. Mismo cuarto. Lo que cambia es lo que haces después de grabar. Responde 4 preguntas y te digo qué le falta a tu voz.</p>
+                <div class="dx-list">
+                    <div><i class="bi bi-check-circle-fill"></i>Tu diagnóstico paso a paso</div>
+                    <div><i class="bi bi-check-circle-fill"></i>Un preset gratis para grabar maquetas</div>
+                    <div><i class="bi bi-check-circle-fill"></i>Qué te conviene, sin venderte de más</div>
+                </div>
+                <button type="button" class="dx-go" id="dxStart" data-sfx="swoosh">Empezar el diagnóstico</button>
+            </div>`);
+            $('#dxStart').onclick = () => { WI.track('popup_click', { meta: { step: 'start' } }); next(); };
+        } else if (s.startsWith('q')) {
+            const qi = idx - 1, q = Q[qi];
+            setBar((qi + 0.4) / (Q.length + 1));
+            const el = mount(`<h2 class="dx-q">${esc(q.title)}</h2><p class="dx-hint">${esc(q.hint)}</p>
+                <div class="dx-opts" role="${q.multi ? 'group' : 'radiogroup'}" aria-label="${esc(q.title)}">${q.opts.map((o, n) => `
+                    <button type="button" class="dx-opt" role="${q.multi ? 'checkbox' : 'radio'}" aria-checked="${isOn(q, o.v)}" data-v="${o.v}" data-sfx="pop">
+                        <span class="dx-ico"><i class="bi bi-${o.i}"></i></span>
+                        <span class="dx-txt">${esc(o.t)}<small>${esc(o.d)}</small></span>
+                        <span class="dx-key" aria-hidden="true">${n + 1}</span>
+                        <span class="dx-check" aria-hidden="true"><i class="bi bi-check-lg"></i></span>
+                    </button>`).join('')}</div>`);
+            el.querySelectorAll('.dx-opt').forEach((b) => b.addEventListener('click', () => pick(b.dataset.v)));
+            go.textContent = qi === Q.length - 1 ? 'Ver mi diagnóstico' : 'Continuar';
+            refreshGo();
+        } else if (s === 'load') {
+            setBar(1);
+            mount(`<div class="dx-center"><div class="dx-ring" aria-hidden="true"></div>
+                <h2 class="wi-h2">Armando tu diagnóstico…</h2>
+                <p class="wi-lead">Revisando tus respuestas.</p></div>`);
+            setTimeout(() => { if (STEPS[idx] === 'load') { sfx('success'); next(); } }, 1500);
+        } else if (s === 'gift') {
+            setBar(1);
+            const first = ORDER.find((k) => ans.pains.has(k)) || 'beat';
+            mount(`<div class="dx-center">
+                <span class="wi-badge wi-badge--success">Tu diagnóstico está listo</span>
+                <h2 class="wi-h2" style="margin-top:14px">${esc(CAUSE[first])}</h2>
+                <p class="wi-lead">Tengo ${route().length} pasos para arreglarlo. Déjame tu correo y te mando además un preset gratis para grabar tus maquetas con lo que ya trae tu DAW.</p>
+                <form class="dx-form" id="dxForm" novalidate>
+                    <input class="dx-hp" type="text" name="website" tabindex="-1" autocomplete="off" aria-hidden="true">
+                    <input class="dx-input" type="email" name="email" inputmode="email" autocomplete="email" placeholder="tu@correo.com" aria-label="Tu correo" required>
+                    <div class="dx-msg" id="dxMsg" role="status"></div>
+                    <button type="submit" class="dx-go" data-sfx="swoosh">Ver mi diagnóstico + regalo</button>
+                    <button type="button" class="dx-skip" id="dxSkip" data-sfx="tick">Ahora no, solo el diagnóstico</button>
+                </form></div>`);
+            $('#dxForm').addEventListener('submit', submitEmail);
+            $('#dxSkip').onclick = () => finish();
+        }
+    }
+
+    function pick(v) {
+        const q = Q[idx - 1];
+        if (q.multi) { ans[q.id].has(v) ? ans[q.id].delete(v) : ans[q.id].add(v); }
+        else ans[q.id] = v;
+        stage.querySelectorAll('.dx-opt').forEach((b) => b.setAttribute('aria-checked', String(isOn(q, b.dataset.v))));
+        refreshGo();
+    }
+    function next() { if (idx < STEPS.length - 1) { idx++; render(); } }
+    function back() { if (idx > 1 && STEPS[idx].startsWith('q')) { idx--; render(); } else if (STEPS[idx] === 'q0') { idx = 0; render(); } }
+    go.addEventListener('click', () => { if (canGo()) next(); });
+
+    async function submitEmail(e) {
+        e.preventDefault();
+        const f = e.currentTarget, msg = $('#dxMsg'), btn = f.querySelector('button[type="submit"]');
+        const email = String(new FormData(f).get('email') || '').trim();
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email)) { msg.className = 'dx-msg'; msg.textContent = 'Revisa tu correo, parece que le falta algo.'; sfx('tick'); return; }
+        btn.disabled = true;
+        const { ok, data } = await WI.api('/leads', { method: 'POST', auth: false, body: {
+            email, website: new FormData(f).get('website'), kind: 'lead_magnet', productId: GIFT_ID,
+            source: 'diagnostico', variant: WI.ab.peek(), utm: WI.utm(), timezone: WI.tz, sessionId: WI.sid, page: location.pathname
+        } });
+        btn.disabled = false;
+        if (!ok) { msg.className = 'dx-msg'; msg.textContent = data?.error || 'No pude guardar tu correo. Intenta otra vez.'; return; }
+        gaveEmail = true;
+        WI.track('lead', { productId: GIFT_ID, meta: { source: 'diagnostico' } });
+        msg.className = 'dx-msg is-ok'; msg.textContent = '¡Listo! Revisa tu correo 🎁';
+        sfx('success');
+        setTimeout(finish, 800);
+    }
+
+    // ── Resultado ───────────────────────────────────────────────────────────
+    function prodCard(p, why) {
+        const cover = p.media?.cover ? `<img src="${esc(p.media.cover)}" alt="" loading="lazy" decoding="async">` : '<i class="bi bi-box-seam"></i>';
+        return `<a class="dx-prod" href="${esc(WI.url(p))}" data-pid="${esc(p.id)}" data-sfx="click">
+            <span class="dx-ph">${cover}</span>
+            <span style="flex:1;min-width:0"><b>${esc(p.title)}</b><small>${esc(why || p.tagline || '')}</small></span>
+            <span>${WI.priceHtml(p.pricing)}</span></a>`;
+    }
+    function finish() {
+        document.body.classList.remove('dx-run');
+        window.scrollTo(0, 0);
+        const by = (id) => catalog?.byId?.get(id);
+        const recId = recommended(), rec = by(recId);
+        const others = ['plantilla-grabacion-y-mezcla-profesional-con-nativos', 'plantilla-grabacion-y-mezcla-profesional', 'plugin-easy-mix']
+            .filter((id) => id !== recId).map(by).filter(Boolean).slice(0, 2);
+        const svc = by('servicio-plantilla-personalizada-para-tu-voz');
+        const gift = by(GIFT_ID);
+        const first = ORDER.find((k) => ans.pains.has(k)) || 'beat';
+        $('#resultBody').innerHTML = `
+            <span class="wi-badge wi-badge--accent">Tu diagnóstico</span>
+            <h1 class="wi-h1" style="margin-top:14px">No es tu micrófono.</h1>
+            <p class="wi-lead" style="margin-top:14px">${esc(CAUSE[first])} Mismo micro, mismo cuarto: cambia lo que haces después de grabar.</p>
+
+            <h2 class="wi-h2" style="margin-top:44px">Tu ruta, en orden</h2>
+            <ol class="dx-road" style="padding:0">${route().map((r, n) => `<li><span class="dx-n">${n + 1}</span><div><b>${esc(r.t)}</b><p>${esc(r.d)}</p></div></li>`).join('')}</ol>
+
+            ${gift ? `<div class="wi-note wi-note--success" style="margin-top:22px"><i class="bi bi-gift"></i><div><b>Tu regalo:</b> ${esc(gift.title)}. ${gaveEmail ? 'Ya te lo mandé al correo.' : `<a href="${esc(WI.url(gift))}" style="text-decoration:underline">Recógelo aquí</a>.`}</div></div>` : ''}
+
+            ${rec ? `<div class="wi-panel wi-panel--accent" style="margin-top:44px">
+                <span class="wi-badge wi-badge--accent">Lo que te recomiendo</span>
+                <h2 class="wi-h2" style="margin-top:14px">${esc(rec.title)}</h2>
+                <p class="wi-lead" style="margin-top:10px;color:#e4e4e7">${esc(WHY[recId] || rec.tagline || '')}</p>
+                <div style="margin-top:16px">${WI.priceHtml(rec.pricing, { lg: true, showSave: true })}</div>
+                <div class="wi-row" style="margin-top:20px"><a class="wi-btn wi-btn--accent wi-btn--lg" id="recGo" href="${esc(WI.url(rec))}" data-pid="${esc(rec.id)}">Ver ${esc(rec.title)}</a></div>
+            </div>` : ''}
+
+            ${others.length ? `<h3 class="wi-h2" style="margin-top:44px;font-size:1.5rem">Otras opciones</h3><div class="dx-two">${others.map((p) => prodCard(p)).join('')}</div>` : ''}
+
+            <div class="wi-panel" style="margin-top:44px">
+                <p class="wi-eyebrow">¿No sabes si te queda?</p>
+                <h2 class="wi-h2" style="margin-top:8px">Mándame tu voz + el beat y te lo pruebo.</h2>
+                <p class="wi-lead" style="margin-top:12px">Escuchas el resultado antes de decidir.${svc ? ' ' + WI.priceHtml(svc.pricing) + ' si te gusta.' : ''}</p>
+                <div class="wi-row" style="margin-top:20px">
+                    <a class="wi-btn wi-btn--dark wi-btn--lg" id="igGo" href="${IG}" target="_blank" rel="noopener"><i class="bi bi-instagram"></i>&nbsp;Mandarme tu voz por Instagram</a>
+                    ${svc ? `<a class="wi-btn wi-btn--ghost wi-btn--lg" href="${esc(WI.url(svc))}" data-pid="${esc(svc.id)}">Ver el servicio</a>` : ''}
+                </div>
+            </div>
+            <p class="wi-subtle" style="margin-top:22px"><button type="button" id="redo" style="text-decoration:underline">Repetir el diagnóstico</button></p>`;
+        if (rec) WI.track('upsell_view', { productId: rec.id, meta: { source: 'diagnostico' } });
+        WI.track('onboarding_done', { meta: { source: 'diagnostico', pains: [...ans.pains], nivel: ans.nivel, plug: ans.plug, meta: ans.meta } });
+        $('#resultBody').addEventListener('click', (e) => {
+            const a = e.target.closest('[data-pid]');
+            if (a) WI.track('upsell_click', { productId: a.dataset.pid, meta: { source: 'diagnostico' } });
+            if (e.target.closest('#igGo')) WI.track('offer_click', { meta: { source: 'diagnostico', to: 'instagram' } });
+        });
+        $('#redo').onclick = () => { ans.pains.clear(); ans.nivel = ans.plug = ans.meta = null; gaveEmail = false; idx = 0; document.body.classList.add('dx-run'); render(); };
+    }
+
+    // ── Teclado: Enter continúa, 1–9 elige ──────────────────────────────────
+    addEventListener('keydown', (e) => {
+        if (!document.body.classList.contains('dx-run') || e.metaKey || e.ctrlKey || e.altKey) return;
+        const tag = (e.target.tagName || '').toLowerCase();
+        const s = STEPS[idx];
+        if (tag === 'input') return;
+        if (e.key === 'Enter' && s.startsWith('q') && canGo() && tag !== 'button') { e.preventDefault(); sfx('swoosh'); next(); }
+        else if (e.key === 'Enter' && s === 'intro' && tag !== 'button') { next(); }
+        else if (/^[1-9]$/.test(e.key) && s.startsWith('q')) {
+            const o = Q[idx - 1].opts[Number(e.key) - 1];
+            if (o) { pick(o.v); sfx('pop'); }
+        } else if (e.key === 'Backspace' && s.startsWith('q')) back();
+    });
+
+    // ── Arranque ────────────────────────────────────────────────────────────
+    render();
+    (async () => {
+        try { catalog = await WI.init({ active: '', footer: true }); } catch (_) { catalog = null; }
+        WI.track('popup_view', { meta: { source: 'diagnostico' } });
+    })();
+})();
+</script>
+</body>
+</html>
