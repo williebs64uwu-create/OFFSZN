@@ -534,6 +534,12 @@ app.get(['/plugin/star-chain', '/plugin/star-chain.html', '/plugins/star-chain',
     return sendEdgeCachedHtml(res, path.join(rootPath, 'plugins/star-chain.html'));
 });
 
+// Beat Post (agente de escritorio): /beat-post lleva a su página de compra (conserva ?email= y ?modo=)
+app.get(['/beat-post', '/beat-post/comprar'], (req, res) => {
+    const q = req.originalUrl.includes('?') ? req.originalUrl.slice(req.originalUrl.indexOf('?')) : '';
+    return res.redirect(302, '/plugins/beat-post-comprar' + q);
+});
+
 // Rutas directas para Checkout de Plugins
 app.get(['/plugin/checkout', '/plugin/checkout.html', '/plugins/checkout', '/plugins/checkout.html'], (req, res) => {
     return sendEdgeCachedHtml(res, path.join(rootPath, 'plugins/checkout.html'));
