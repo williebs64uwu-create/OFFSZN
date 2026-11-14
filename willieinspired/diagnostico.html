@@ -83,7 +83,7 @@
         .mk-warn { margin-top: 10px; padding: 9px 10px; border-radius: 12px; background: rgba(245,158,11,.14); border: 1px solid rgba(245,158,11,.3); color: #fcd9a0; }
 
         /* Tarjeta blanca del quiz */
-        .ib-card { position: relative; z-index: 5; max-width: 560px; margin: -62px auto 0; background: var(--surface); border: 1px solid var(--line); border-radius: 24px; box-shadow: var(--shadow-lg); overflow: hidden; }
+        .ib-card { position: relative; z-index: 5; max-width: 560px; margin: 6px auto 0; background: var(--surface); border: 1px solid var(--line); border-radius: 24px; box-shadow: var(--shadow-lg); overflow: hidden; }
         .ib-prog { height: 4px; background: var(--line); }
         .ib-prog i { display: block; height: 100%; background: var(--accent); width: 0; transition: width .5s var(--ease); }
         .ib-body { padding: 22px 20px 20px; }
@@ -154,7 +154,8 @@
         .ib-n { width: 30px; height: 30px; flex: none; border-radius: 50%; background: var(--ink); color: #fff; display: grid; place-items: center; font-weight: 800; font-size: .85rem; }
         .ib-stages b { display: block; font-size: .95rem; }
         .ib-stages small { display: block; margin-top: 2px; font-size: .84rem; line-height: 1.45; color: var(--ink-soft); }
-        .ib-tag { margin-left: auto; flex: none; font-size: .68rem; font-weight: 800; padding: 3px 9px; border-radius: 99px; background: var(--accent-tint); color: var(--accent-ink); }
+        .ib-stages b { display: inline; }
+        .ib-tag { display: inline-block; margin: 0 0 0 8px; vertical-align: 1px; font-size: .68rem; font-weight: 800; padding: 3px 9px; border-radius: 99px; background: var(--accent-tint); color: var(--accent-ink); }
         .ib-tag.g { background: var(--line); color: var(--muted); }
         .ib-gift { display: flex; gap: 12px; align-items: center; padding: 14px 16px; border-radius: 18px; background: var(--green-tint); color: #006b4f; font-size: .9rem; font-weight: 600; }
         .ib-gift i { font-size: 1.4rem; }
@@ -191,6 +192,24 @@
         .ib-pills a { padding: 6px 14px; border-radius: 99px; background: var(--surface); border: 1px solid var(--line-strong); font-size: .7rem; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; text-decoration: none; color: var(--ink-soft); }
         .ib-foot p { margin: 14px 0 0; font-size: .72rem; color: var(--muted); }
 
+
+        /* Testimonios (capturas reales, grandes) */
+        .ib-testi { margin: 26px -18px 0; }
+        .ib-trail { display: flex; gap: 14px; overflow-x: auto; scroll-snap-type: x mandatory; padding: 18px 18px 22px; -webkit-overflow-scrolling: touch; scrollbar-width: none; scroll-padding: 0 18px; }
+        .ib-trail::-webkit-scrollbar { display: none; }
+        .ib-tc { flex: none; width: min(300px, 78vw); height: 340px; scroll-snap-align: start; position: relative; border-radius: 20px; background: #0d1017; border: 1px solid rgba(12,20,36,.12); box-shadow: var(--shadow-md); overflow: hidden; display: grid; place-items: center; padding: 10px; cursor: zoom-in; transition: transform .2s var(--ease); }
+        .ib-tc:hover { transform: translateY(-3px); }
+        .ib-tc img { max-width: 100%; max-height: 100%; width: auto; height: auto; object-fit: contain; border-radius: 12px; display: block; }
+        .ib-tc::after { content: "\F52A"; font-family: bootstrap-icons; position: absolute; right: 10px; bottom: 10px; width: 30px; height: 30px; border-radius: 50%; background: rgba(255,255,255,.14); color: #fff; display: grid; place-items: center; font-size: .8rem; backdrop-filter: blur(6px); }
+        .ib-lb { position: fixed; inset: 0; z-index: 200; background: rgba(8,12,22,.9); display: none; align-items: center; justify-content: center; padding: 20px; cursor: zoom-out; }
+        .ib-lb.on { display: flex; animation: ibIn .25s var(--ease) both; }
+        .ib-lb img { max-width: min(96vw, 900px); max-height: 92vh; border-radius: 14px; }
+        @media (min-width: 760px) { .ib-testi { margin-inline: calc(50% - 50vw); } .ib-trail { justify-content: safe center; } .ib-tc { width: 300px; height: 420px; } }
+        .ib-pc .th { background: #f1f4f9; padding: 8px; }
+        .ib-pc .th.dark { background: var(--navy); padding: 0; }
+        .ib-pc .th img { object-fit: contain; }
+        .ib-pc .th.dark img { object-fit: cover; }
+        .ib-pc .th { aspect-ratio: 4/3; }
         @media (max-width: 520px) { .mk-l, .mk-r { width: 56%; } .mk-c { width: 64%; } .ib-mock { height: 220px; } }
         @media (prefers-reduced-motion: reduce) { .ib-step, .ib-panel, .ib-rec { animation: none; } .ib-prog i, .ib-circ i, .ib-opt, .ib-cta, .ib-pc { transition: none; } .ib-ring { animation-duration: 2.4s; } }
     </style>
@@ -198,45 +217,17 @@
 <body>
 <div class="ib-pill" aria-hidden="false">
     <span class="ib-pill-ico"><i class="bi bi-mic-fill"></i></span>
-    <div><b>Diagnóstico de voz <em>+ preset gratis</em></b><span>4 preguntas · menos de 1 minuto</span></div>
+    <div><b>Diagnóstico de voz <em>+ preset gratis</em></b><span>5 preguntas · menos de 1 minuto</span></div>
 </div>
 
 <main class="ib">
     <div class="ib-wrap">
         <h1 class="ib-h1" id="ibTitle">No culpes al micrófono: te digo <em>qué le falta a tu voz</em>… en menos de 1 minuto</h1>
 
-        <div class="ib-mock" aria-hidden="true">
-            <div class="mk mk-l">
-                <div class="mk-top"><span class="mk-logo">WI</span> Willie Inspired / Ruta</div>
-                <div class="mk-title"><i>≡</i> Paso 03 · Aire</div>
-                <div class="mk-rows">
-                    <div class="mk-row"><span class="ic">◎</span><div><b>Graves</b><small>Filtro en 70 Hz</small></div></div>
-                    <div class="mk-row"><span class="ic">▣</span><div><b>Compresión</b><small>−4 dB y luego −2 dB</small></div></div>
-                    <div class="mk-row"><span class="ic">◇</span><div><b>De-esser</b><small>De 3 a 5 dB</small></div></div>
-                    <div class="mk-row"><span class="ic">☺</span><div><b>Aire</b><small>8 kHz y 16 kHz</small></div></div>
-                </div>
-            </div>
-            <div class="mk mk-r">
-                <div class="mk-top"><span class="mk-logo">WI</span> Willie Inspired / Pasos</div>
-                <div class="mk-rows">
-                    <div class="mk-row"><div><b>Paso 1 · Limpiar</b><small>70 Hz</small></div><span class="mk-tag">Hecho</span></div>
-                    <div class="mk-row"><div><b>Paso 2 · Comprimir</b><small>−4 / −2 dB</small></div><span class="mk-tag">Hecho</span></div>
-                    <div class="mk-row"><div><b>Paso 3 · Aire</b><small>8k / 16k</small></div><span class="mk-tag n">En curso</span></div>
-                </div>
-                <div class="mk-warn"><b>Ojo:</b> la reverb en la voz la ensucia. Va en un envío con sidechain.</div>
-            </div>
-            <div class="mk mk-c">
-                <div class="mk-top"><span class="mk-logo">WI</span> Willie Inspired / Ruta de mezcla</div>
-                <div class="mk-title"><i>▲</i> Tu Ruta de Mezcla</div>
-                <div class="mk-box">
-                    <div class="mk-top">◔ Progreso de la ruta</div>
-                    <div class="mk-ring">
-                        <div class="mk-dial"><span>03</span></div>
-                        <div class="mk-leg"><div><i></i>Pasos hechos <b>2</b></div><div><i class="b"></i>Paso actual <b>Aire</b></div><div><i class="g"></i>Restantes <b>3</b></div></div>
-                    </div>
-                </div>
-            </div>
-        </div>
+        <section class="ib-testi" id="testi" aria-label="Testimonios">
+            <div class="ib-sec-h"><small>Capturas reales · Easy Mix</small><h2>Lo que dicen los artistas y productores</h2></div>
+            <div class="ib-trail" id="trail" tabindex="0"></div>
+        </section>
 
         <section class="ib-card" id="card" aria-live="polite" aria-label="Diagnóstico de tu voz">
             <div class="ib-prog" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" id="ibProgWrap"><i id="ibProg"></i></div>
@@ -255,7 +246,7 @@
         </div>
 
         <section class="ib-sec" id="shop" hidden>
-            <div class="ib-sec-h"><small>En la tienda</small><h2>Lo que uso para que tu voz suene profesional</h2></div>
+            <div class="ib-sec-h"><small>En la tienda</small><h2>Lo que tengo para ti en la tienda</h2></div>
             <div class="ib-rail" id="rail"></div>
         </section>
 
@@ -287,69 +278,94 @@
     const was = (p) => { const c = p.pricing?.compareAtLocal; return c ? WI.fmt(c.amount, c.currency) : ''; };
     $('#yr').textContent = new Date().getFullYear();
 
-    // ── Preguntas ───────────────────────────────────────────────────────────
+    // ── Preguntas (las de tus DMs: «¿qué necesitas en tus voces actualmente?», «¿nativos o externos como FabFilter, Waves?») ──
     const Q = [
-        { id: 'pains', multi: true, title: '¿Qué le molesta a tu oído de tu voz?', hint: 'Marca todas las que te pasen.', opts: [
-            { v: 'beat',   t: 'Mi voz no encaja en el beat', d: 'El beat la tapa o se siente separada' },
-            { v: 'aire',   t: 'Se escucha apagada, sin brillo', d: 'Le falta aire' },
-            { v: 's',      t: 'Las S se clavan en el oído', d: 'Suenan filosas' },
-            { v: 'comp',   t: 'Sube y baja de volumen', d: 'Unas palabras se pierden' },
-            { v: 'graves', t: 'Retumba o suena embarrada', d: 'Demasiado grave en el micro' },
-            { v: 'fx',     t: 'Con reverb o delay se ensucia', d: 'El efecto se come la voz' }
+        { id: 'pains', multi: true, title: 'Cuéntame, ¿qué necesitas en tus voces actualmente?', hint: 'Así te digo qué preset o plantilla funciona en tu estilo. Marca todas las que te pasen.', opts: [
+            { v: 'aire',   t: 'Más brillo, la siento apagada' },
+            { v: 'beat',   t: 'No se siente parte del beat' },
+            { v: 'frente', t: 'Quiero presencia, que vaya al frente' },
+            { v: 'caja',   t: 'Suena encajonada, sin cuerpo' },
+            { v: 'ruido',  t: 'Tiene ruido de fondo' },
+            { v: 'fx',     t: 'Con reverb o delay se ensucia' },
+            { v: 'afina',  t: 'El autotune la deja robótica' }
         ] },
-        { id: 'nivel', title: '¿Cuánto has mezclado?', hint: 'Sin pena, aquí nadie nace sabiendo.', opts: [
-            { v: 'nunca',  t: 'Nunca he mezclado' },
-            { v: 'basico', t: 'Sé lo básico, pero no sé por qué muevo cosas' },
-            { v: 'pulir',  t: 'Ya mezclo, me falta pulirla' }
-        ] },
-        { id: 'plug', title: '¿Con qué plugins cuentas?', hint: 'Así armo la ruta con lo que ya tienes.', opts: [
-            { v: 'nativos',  t: 'Solo los nativos de tu DAW' },
-            { v: 'terceros', t: 'Tengo plugins de terceros (Waves, FabFilter…)' },
+        { id: 'plug', title: '¿Has probado con plugins nativos o externos como FabFilter, Waves?', hint: 'Así sé con qué te armo la ruta.', opts: [
+            { v: 'nativos',  t: 'Solo los nativos de mi DAW' },
+            { v: 'terceros', t: 'Externos, como FabFilter o Waves' },
             { v: 'nose',     t: 'No sé cuáles usar' }
         ] },
-        { id: 'meta', title: '¿Qué quieres lograr?', hint: 'Te recomiendo según esto.', opts: [
-            { v: 'maquetas', t: 'Grabar maquetas rápido' },
-            { v: 'pro',      t: 'Que mi tema suene profesional' },
-            { v: 'hecho',    t: 'Que me lo dejen listo para mi voz' }
+        { id: 'nivel', title: '¿Qué tanto has mezclado?', hint: 'Sin pena, bro. Aquí nadie nace sabiendo.', opts: [
+            { v: 'nunca',  t: 'Soy nuevo, no sé mover nada' },
+            { v: 'basico', t: 'Sé lo básico, pero no sé por qué muevo cosas' },
+            { v: 'pulir',  t: 'Ya mezclo, quiero hacerlo más rápido' }
+        ] },
+        { id: 'estilo', title: '¿Qué estilo haces?', hint: 'Cada estilo pide la voz distinta.', opts: [
+            { v: 'regueton', t: 'Reguetón' },
+            { v: 'trap',     t: 'Trap o drill' },
+            { v: 'rnb',      t: 'R&B' },
+            { v: 'plugg',    t: 'Plugg' },
+            { v: 'rap',      t: 'Rap hablado' },
+            { v: 'otro',     t: 'Otro' }
+        ] },
+        { id: 'meta', title: '¿Qué te sirve más?', hint: 'Elige uno y te muestro lo que mejor se acomoda.', opts: [
+            { v: 'plantilla', t: 'Una plantilla completa que yo mismo use' },
+            { v: 'easy',      t: 'Un plugin con perillas fáciles' },
+            { v: 'hecho',     t: 'Que me lo pruebes en mi voz primero' }
         ] }
     ];
-    const STEPS = ['q0', 'q1', 'q2', 'q3', 'load', 'gift'];
-    const ans = { pains: new Set(), nivel: null, plug: null, meta: null };
+    const STEPS = ['q0', 'q1', 'q2', 'q3', 'q4', 'load', 'gift'];
+    const ans = { pains: new Set(), plug: null, nivel: null, estilo: null, meta: null };
     let idx = 0, catalog = null, gaveEmail = false, lock = false;
 
+    // Lo que le digo a cada uno (reglas de Willie: las mismas que usa STAR CHAIN)
     const FIX = {
-        graves: { t: 'Corta lo que retumba', d: 'Filtro pasa-altos en 70 Hz. Limpia el cuarto sin quitarle cuerpo a la voz.' },
-        comp:   { t: 'Aplana los subibajas', d: 'Dos compresores suaves en vez de uno fuerte: primero −4 dB y luego −2 dB de reducción.' },
-        s:      { t: 'Baja las S', d: 'De-esser quitando de 3 a 5 dB. Solo las S, no la voz entera.' },
-        aire:   { t: 'Dale aire', d: 'Un toque de brillo en 8 kHz y 16 kHz, al final de la cadena. Poquito, que no suene a radio.' },
-        fx:     { t: 'Efectos en envíos, no en la voz', d: 'Reverb y delay van en un envío con sidechain para que se aparten cuando cantas.' },
-        beat:   { t: 'Siéntala dentro del beat', d: 'Deja la voz cerca de −6 dB en el mezclador y baja el beat hasta que no la tape.' }
+        ruido:  { t: 'Limpia el ruido, poquito', d: 'NS1 o un reductor de ruido, sin pasarte: si limpias de más la voz queda flaca. Primero limpia, después colorea.' },
+        afina:  { t: 'Un solo afinador y va primero', d: 'Para que no suene robótica: Retune 15 y Humanize 30. Más natural todavía: 30 y 50.' },
+        graves: { t: 'Corta los graves que sobran', d: 'Filtro desde 70 Hz si tu voz es grave, 100 Hz si es media y 120 Hz si es aguda o rap.' },
+        caja:   { t: 'Quita lo encajonado', d: 'Baja de 2 a 3 dB entre 500 y 700 Hz. Si además se siente tapada, baja también 250 a 350 Hz.' },
+        comp:   { t: 'Dos compresores suaves, no uno fuerte', d: 'El primero baja como máximo 4 dB y el segundo 2 dB. Cortas antes de comprimir y realzas después.' },
+        aire:   { t: 'Dale aire', d: 'Sube de 1.5 a 3 dB arriba de 10 kHz, al final de la cadena. No pases de +4 dB y, si hay ruido, límpialo primero.' },
+        fx:     { t: 'Reverb y delay en envío, no encima de tu voz', d: 'Corta los graves del reverb (400 Hz) y ponle sidechain para que se aparte cuando cantas.' },
+        frente: { t: 'Ponla al frente', d: 'Sube 2 dB entre 2.5 y 4 kHz, comprime más rápido y baja un poco el envío del reverb. Voz cerca de −6 dB y el beat en −3.' },
+        beat:   { t: 'Métela en el beat', d: 'Baja 1.5 dB entre 3 y 4 kHz y dale un poco más de reverb corto. El beat ya está lleno: tu voz tiene que hacerse su espacio.' }
     };
-    const ORDER = ['graves', 'comp', 's', 'aire', 'fx', 'beat'];
+    const ORDER = ['ruido', 'afina', 'graves', 'caja', 'comp', 'aire', 'fx', 'frente', 'beat'];
     const CAUSE = {
-        beat:   'Tu voz no encaja en el beat porque está peleando por el mismo espacio.',
-        aire:   'Tu voz se oye apagada porque le falta aire arriba y el beat se lo come.',
-        s:      'Tus S se clavan porque nadie las está domando.',
-        comp:   'Tu voz sube y baja porque no tiene una compresión que la sostenga.',
-        graves: 'Tu voz suena embarrada porque tiene graves de más que no deberían estar.',
-        fx:     'Tus efectos ensucian porque están encima de la voz y no en un envío.'
+        beat:   'El beat ya está lleno y tu voz no tiene dónde entrar.',
+        frente: 'Tu voz se queda atrás porque le falta presencia frente al beat.',
+        aire:   'A tu voz le falta aire y el beat se lo come.',
+        caja:   'Tu voz suena encajonada porque sobra en los medios.',
+        ruido:  'El ruido de fondo te está ensuciando la voz.',
+        fx:     'Tus efectos están encima de la voz y la ensucian.',
+        afina:  'Tu autotune está muy duro y por eso suena robótica.'
     };
+    const CAUSE_ORDER = ['beat', 'frente', 'aire', 'caja', 'ruido', 'fx', 'afina'];
+    const STYLE = {
+        regueton: 'En reguetón la voz va adelante, brillante y limpia, con reverb corto.',
+        trap:     'En trap va densa y con actitud: afinación marcada y delays grandes, pero filtrados.',
+        rnb:      'En R&B va cálida y natural. No la sobrecomprimas.',
+        plugg:    'En plugg va etérea: afinación dura, aire arriba y reverb grande filtrado.',
+        rap:      'En rap hablado va con menos afinación y más compresión.'
+    };
+    const firstCause = () => CAUSE_ORDER.find((k) => ans.pains.has(k)) || 'beat';
     const route = () => {
-        const picked = ORDER.filter((k) => ans.pains.has(k));
-        ['graves', 'comp', 'beat'].forEach((k) => { if (picked.length < 3 && !picked.includes(k)) picked.push(k); });
-        return ORDER.filter((k) => picked.includes(k)).slice(0, 5).map((k) => FIX[k]);   // siempre en el orden técnico: graves → compresión → S → aire → envíos → beat
+        const picked = new Set(ans.pains);
+        if (picked.has('beat') && picked.has('frente')) picked.delete('frente');   // se contradicen: manda «parte del beat»
+        picked.add('graves'); picked.add('comp');
+        return ORDER.filter((k) => picked.has(k)).map((k) => FIX[k]);
     };
     const recommended = () => {
         if (ans.meta === 'hecho') return 'servicio-plantilla-personalizada-para-tu-voz';
+        if (ans.meta === 'easy') return 'plugin-easy-mix';
         if (ans.plug === 'nativos') return 'plantilla-grabacion-y-mezcla-profesional-con-nativos';
-        if (ans.nivel === 'nunca') return 'plugin-easy-mix';
-        return 'plantilla-grabacion-y-mezcla-profesional';
+        if (ans.plug === 'terceros') return 'plantilla-grabacion-y-mezcla-profesional';
+        return ans.nivel === 'nunca' ? 'plugin-easy-mix' : 'plantilla-grabacion-y-mezcla-profesional-con-nativos';
     };
     const WHY = {
-        'servicio-plantilla-personalizada-para-tu-voz': 'Me mandas tu voz y yo te preparo la plantilla. La escuchas antes de pagar.',
-        'plantilla-grabacion-y-mezcla-profesional-con-nativos': 'Solo usa plugins nativos de tu DAW: la abres, grabas y ya está ruteada.',
-        'plugin-easy-mix': 'Perillas con nombres que dicen lo que hacen. Para no tener que perillear plugins sin saber.',
-        'plantilla-grabacion-y-mezcla-profesional': 'La estructura con la que mezclo a mis clientes, con los plugins necesarios incluidos.'
+        'servicio-plantilla-personalizada-para-tu-voz': 'Mándame tu voz + el beat y te lo pruebo. Escuchas el resultado antes de decidir.',
+        'plantilla-grabacion-y-mezcla-profesional-con-nativos': 'Es una plantilla completa: voz principal, adlibs, secundarias y el master incluido. Esta es la de solo plugins nativos, no instalas nada.',
+        'plugin-easy-mix': 'Tiene nombres fáciles para usarlo: quitar graves, brillo, poner la voz al frente. Lo pruebas 3 días gratis.',
+        'plantilla-grabacion-y-mezcla-profesional': 'Es una plantilla completa: voz principal, adlibs, secundarias y el master incluido. Esta es la versión con plugins de Waves.'
     };
 
     // ── Render ──────────────────────────────────────────────────────────────
@@ -378,7 +394,7 @@
             if (q.multi) { $('#ibGo').onclick = () => { if (canGo()) next(); }; refreshGo(); }
         } else if (s === 'load') {
             setProg(1);
-            const lines = ['Revisando lo que te molesta', 'Armando tu ruta de mezcla', 'Buscando lo que te conviene'];
+            const lines = ['Revisando lo que me cuentas', 'Armando tu ruta de mezcla', 'Buscando lo que mejor se acomoda'];
             mount(`<div class="ib-center"><div class="ib-ring" aria-hidden="true"></div><h2 class="ib-q">Armando tu diagnóstico…</h2>
                 <div class="ib-check">${lines.map((l) => `<div><i class="bi bi-check-circle-fill"></i>${l}</div>`).join('')}</div></div>`);
             const rows = stage.querySelectorAll('.ib-check div');
@@ -386,10 +402,10 @@
             setTimeout(() => { if (STEPS[idx] === 'load') { sfx('success'); next(); } }, 350 + rows.length * 450 + 250);
         } else if (s === 'gift') {
             setProg(1);
-            const first = ORDER.find((k) => ans.pains.has(k)) || 'beat';
+            const first = firstCause();
             mount(`<div class="ib-center"><span class="ib-chip">Tu diagnóstico está listo</span>
                 <h2 class="ib-q" style="margin-top:12px">${esc(CAUSE[first])}</h2>
-                <p class="ib-hint">Tengo ${route().length} pasos para arreglarlo. Déjame tu correo y te mando también un preset gratis para grabar tus maquetas.</p></div>
+                <p class="ib-hint">Tengo ${route().length} pasos para arreglarlo. Déjame tu correo y te mando también un preset gratis para grabar tus maquetas con lo que ya trae tu DAW.</p></div>
                 <form id="ibForm" novalidate>
                     <input class="ib-hp" type="text" name="website" tabindex="-1" autocomplete="off" aria-hidden="true">
                     <input class="ib-input" type="email" name="email" inputmode="email" autocomplete="email" placeholder="Tu correo" aria-label="Tu correo" required>
@@ -435,7 +451,7 @@
 
     // ── Resultado ───────────────────────────────────────────────────────────
     const miniCard = (p) => `<a class="ib-pc" href="${esc(WI.url(p))}" data-pid="${esc(p.id)}" data-sfx="click">
-        <div class="th">${img(p) ? `<img src="${esc(img(p))}" alt="" loading="lazy" decoding="async">` : '<i class="bi bi-box-seam"></i>'}</div>
+        <div class="th${p.id === 'plugin-easy-mix' ? ' dark' : ''}">${img(p) ?`<img src="${esc(img(p))}" alt="" loading="lazy" decoding="async">` : '<i class="bi bi-box-seam"></i>'}</div>
         <div class="t"><b>${esc(p.title)}</b><small>${esc(price(p))}</small></div></a>`;
 
     async function finish() {
@@ -445,7 +461,7 @@
         const others = ['plantilla-grabacion-y-mezcla-profesional-con-nativos', 'plantilla-grabacion-y-mezcla-profesional', 'plugin-easy-mix']
             .filter((id) => id !== recId).map(by).filter(Boolean).slice(0, 2);
         const svc = by('servicio-plantilla-personalizada-para-tu-voz'), gift = by(GIFT_ID);
-        const first = ORDER.find((k) => ans.pains.has(k)) || 'beat';
+        const first = firstCause();
         const steps = route();
         const tag = (n) => (n === 0 ? '<span class="ib-tag">Primero</span>' : n === steps.length - 1 ? '<span class="ib-tag g">Al final</span>' : '<span class="ib-tag g">Después</span>');
         $('#ibTitle').innerHTML = 'Tu diagnóstico está listo: <em>no es tu micrófono</em>';
@@ -453,12 +469,12 @@
             <div class="ib-panel">
                 <span class="ib-eyebrow">Diagnóstico</span>
                 <h2>${esc(CAUSE[first])}</h2>
-                <p>Mismo micro. Mismo cuarto. Lo que cambia es lo que haces después de grabar. Esta es tu ruta, en orden:</p>
-                <ol class="ib-stages">${steps.map((r, n) => `<li><span class="ib-n">${n + 1}</span><div><b>${esc(r.t)}</b><small>${esc(r.d)}</small></div>${tag(n)}</li>`).join('')}</ol>
+                <p>Entiendo bro. Mismo micro, mismo cuarto: lo que cambia es cómo trabajas la voz después de grabar.${STYLE[ans.estilo] ? ' ' + esc(STYLE[ans.estilo]) : ''} Mira por dónde empezar:</p>
+                <ol class="ib-stages">${steps.map((r, n) => `<li><span class="ib-n">${n + 1}</span><div style="min-width:0"><b>${esc(r.t)}</b>${tag(n)}<small>${esc(r.d)}</small></div></li>`).join('')}</ol>
             </div>
             ${gift ? `<div class="ib-gift"><i class="bi bi-gift"></i><div>${gaveEmail ? `Tu regalo ya va a tu correo: <b>${esc(gift.title)}</b>.` : `Tu regalo: <b>${esc(gift.title)}</b>. <a href="${esc(WI.url(gift))}" style="text-decoration:underline">Recógelo aquí</a>.`}</div></div>` : ''}
             ${rec ? `<div class="ib-rec">
-                <div><span class="ib-eyebrow">Lo que te recomiendo</span><h2>${esc(rec.title)}</h2><p>${esc(WHY[recId] || rec.tagline || '')}</p>
+                <div><span class="ib-eyebrow">Con esa descripción, esto es lo que mejor se acomoda</span><h2>${esc(rec.title)}</h2><p>${esc(WHY[recId] || rec.tagline || '')}</p>
                 <div class="ib-price">${esc(price(rec))}${was(rec) ? `<s>${esc(was(rec))}</s>` : ''}</div>
                 <a class="ib-cta" id="recGo" href="${esc(WI.url(rec))}" data-pid="${esc(rec.id)}" data-sfx="swoosh">Ver ${esc(rec.title)} <i class="bi bi-arrow-right"></i></a></div>
                 ${img(rec) ? `<img src="${esc(img(rec))}" alt="" decoding="async">` : ''}
@@ -467,12 +483,13 @@
             <div class="ib-panel ib-handoff">
                 <span class="ib-eyebrow">¿No sabes si te queda?</span>
                 <h2>Mándame tu voz + el beat y te lo pruebo</h2>
-                <p>Escuchas el resultado antes de decidir${svc ? ` (si te gusta, ${esc(price(svc))})` : ''}.</p>
+                <p>Te mando un video así escuchas el resultado, y me dices qué te parece${svc ? `. Si te gusta, son ${esc(price(svc))}` : ''}.</p>
                 <a class="ib-cta ib-cta--ink" id="igGo" href="${IG}" target="_blank" rel="noopener"><i class="bi bi-instagram"></i> Mandarme mi voz por Instagram</a>
                 <a class="ib-cta ib-cta--wa" id="waGo" href="${esc(WI.wa('Hola Willie! Hice el diagnóstico de voz y quiero que me pruebes mi voz'))}" target="_blank" rel="noopener"><i class="bi bi-whatsapp"></i> Mandarla por WhatsApp</a>
                 <button type="button" class="ib-link" id="redo">Repetir el diagnóstico</button>
             </div>`;
         document.body.classList.add('is-result');
+        $('#res').after($('#testi'));   // los testimonios se quedan, ahora debajo del resultado
         window.scrollTo(0, 0);
         if (rec) WI.track('upsell_view', { productId: rec.id, meta: { source: 'diagnostico' } });
         WI.track('onboarding_done', { meta: { source: 'diagnostico', pains: [...ans.pains], nivel: ans.nivel, plug: ans.plug, meta: ans.meta } });
@@ -482,8 +499,9 @@
             if (e.target.closest('#igGo, #waGo')) WI.track('offer_click', { meta: { source: 'diagnostico', to: e.target.closest('#igGo') ? 'instagram' : 'whatsapp' } });
         });
         $('#redo').onclick = () => {
-            ans.pains.clear(); ans.nivel = ans.plug = ans.meta = null; gaveEmail = false; idx = 0;
+            ans.pains.clear(); ans.nivel = ans.plug = ans.estilo = ans.meta = null; gaveEmail = false; idx = 0;
             document.body.classList.remove('is-result'); $('#res').innerHTML = '';
+            $('#ibTitle').after($('#testi'));
             $('#ibTitle').innerHTML = 'No culpes al micrófono: te digo <em>qué le falta a tu voz</em>… en menos de 1 minuto';
             window.scrollTo(0, 0); render();
         };
@@ -491,13 +509,23 @@
 
     // ── Carrusel de productos (productos reales de la tienda) ───────────────
     function renderShop() {
-        const ids = ['lead-graba-maquetas-con-nativos', 'plantilla-grabacion-y-mezcla-profesional-con-nativos', 'plantilla-grabacion-y-mezcla-profesional', 'plugin-easy-mix'];
+        const ids = ['plantilla-grabacion-y-mezcla-profesional-con-nativos', 'plantilla-grabacion-y-mezcla-profesional', 'plugin-easy-mix'];   // solo los de pago
         const list = ids.map((id) => catalog?.byId?.get(id)).filter(Boolean);
         if (!list.length) return;
         $('#rail').innerHTML = list.map(miniCard).join('');
         $('#shop').hidden = false;
         $('#rail').addEventListener('click', (e) => { const a = e.target.closest('[data-pid]'); if (a) WI.track('upsell_click', { productId: a.dataset.pid, meta: { source: 'diagnostico', where: 'rail' } }); });
     }
+
+    // ── Testimonios: capturas reales de la página de Easy Mix, grandes y con zoom ──
+    const TESTI = ['testi-1.jpg', 'testi-4.jpg', 'testi-3.jpg', 'chrome_sRDhkGjPW8.png', 'chrome_X0VHS3Sw0h.png', 'testi-5.jpg', 'chrome_wvvsGlZV7e.png', 'plugin-testi.png', 'chrome_UysuaXrBoQ.png', 'testi-new-1.jpg', 'chrome_18pXdN4UU8.png'];
+    $('#trail').innerHTML = TESTI.map((f) => `<button type="button" class="ib-tc" data-src="/images/plugins/${f}" aria-label="Ver testimonio en grande"><img src="/images/plugins/${f}" alt="Testimonio de un cliente de Easy Mix" loading="lazy" decoding="async"></button>`).join('');
+    const lb = document.createElement('div');
+    lb.className = 'ib-lb'; lb.innerHTML = '<img alt="Testimonio">';
+    document.body.appendChild(lb);
+    $('#trail').addEventListener('click', (e) => { const b = e.target.closest('.ib-tc'); if (b) { lb.firstChild.src = b.dataset.src; lb.classList.add('on'); sfx('pop'); } });
+    lb.addEventListener('click', () => lb.classList.remove('on'));
+    addEventListener('keydown', (e) => { if (e.key === 'Escape') lb.classList.remove('on'); });
 
     // ── Teclado: Enter continúa, 1–9 elige ──────────────────────────────────
     addEventListener('keydown', (e) => {
