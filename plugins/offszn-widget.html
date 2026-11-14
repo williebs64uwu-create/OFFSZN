@@ -19,19 +19,17 @@
     <meta name="twitter:card" content="summary_large_image">
 
     <!--
-      ╔══════════════════════════════════════════════════════════════════════════════╗
-      ║  CONFIGURACIÓN (lo único que hay que tocar para vender)                      ║
-      ║  1. productId:   id del producto "OFFSZN Widget" en la tienda (el mismo que  ║
-      ║                  va en WIDGET_PRODUCT_IDS de Vercel). Con 0 no se muestra    ║
-      ║                  ningún botón de pago (la página se puede publicar igual).   ║
-      ║  2. price:       precio en USD (debe coincidir con la tienda y el backend);   ║
-      ║     listPrice:   precio anterior que se muestra tachado (0 = no se tacha).    ║
-      ║  3. yapePricePEN: precio fijo en soles para Yape (0 = lo calcula el backend).║
-      ║  4. downloadUrl: enlace del instalador de Windows. Vacío = sin botón.        ║
-      ╚══════════════════════════════════════════════════════════════════════════════╝
+      CONFIGURACIÓN (lo único que hay que tocar para vender)
+      1. productId:    5004 = producto "OFFSZN Widget" en la tienda (creado el 14-11-2026, privado, 9 USD).
+                       Es el mismo que espera el servidor si WIDGET_PRODUCT_IDS no está puesto en Vercel.
+      2. price:        precio en USD (el servidor cobra 9 fijo; WIDGET_PRICES en server/src/shared/store/yapePricing.js).
+         listPrice:    precio anterior que se muestra tachado (0 = no se tacha).
+      3. yapePricePEN: precio fijo en soles para Yape (0 = lo calcula el backend).
+      4. downloadUrl:  enlace del instalador de Windows. Vacío = sin botón de descarga y SIN botones de pago
+                       (nadie compra sin poder descargar). Al ponerlo, se abre la venta.
     -->
     <script>
-        window.WIDGET_PAGE = { productId: 0, price: 9, listPrice: 20, yapePricePEN: 0, downloadUrl: '' };
+        window.WIDGET_PAGE = { productId: 5004, price: 9, listPrice: 20, yapePricePEN: 0, downloadUrl: '' };
     </script>
 
     <!-- iconos que usa el modal de compra (script/plugin-checkout.js) -->
@@ -307,7 +305,7 @@
                 document.getElementById('dlSoon').hidden = true;
                 document.getElementById('dlNote').textContent = 'Windows 10 y 11 · sin registro · la primera vez Windows puede pedir «Más información → Ejecutar de todas formas».';
             }
-            if (c.productId) {
+            if (c.productId && c.downloadUrl) {
                 window.PLUGIN_NAME = 'OFFSZN Widget';
                 window.PLUGIN_ID = c.productId;
                 window.CURRENT_PROMO_PRICE = c.price;

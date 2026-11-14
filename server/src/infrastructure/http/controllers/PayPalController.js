@@ -12,6 +12,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { getPresignedDownloadUrl } from '../../services/r2-storage.service.js';
 import { generatePluginLicense } from './PluginLicensingController.js';
 import { isProductOfPlugin, firstProductIdOf } from '../../../shared/config/pluginRegistry.js';
+import { WIDGET_PRICES } from '../../../shared/store/yapePricing.js';
 import MetaCapiService from '../../services/MetaCapiService.js';
 
 // --- PayPal OAuth Config ---
@@ -476,6 +477,15 @@ export const createPayPalOrder = async (req, res) => {
                 verifiedCartItems.push({ ...item, variant_price: partnerShare });
                 console.log(`[PayPalOrder] Coca-Cola: customer pays $${validPluginPrice} | OFFSZN=$${offsznShare} | partner=$${partnerShare}`);
                 return; // Skip regular DB price logic for this product
+            }
+
+            // OFFSZN Widget (ID 5004 o WIDGET_PRODUCT_IDS): 100% OFFSZN a precio fijo (9 US$). El precio lo fija el servidor, nunca el cliente.
+            if (isProductOfPlugin('offszn-widget', { id: prodIdToFind, name: item.product?.name })) {
+                const widgetPrice = WIDGET_PRICES[0];
+                subtotal += widgetPrice;
+                verifiedCartItems.push({ ...item, variant_price: widgetPrice });
+                console.log(`[PayPalOrder] OFFSZN Widget: customer pays $${widgetPrice} | 100% OFFSZN`);
+                return;
             }
 
             // STAR CHAIN (ID 5003): 100% OFFSZN, licencia FULL a 49 US$ fijos. El precio lo fija el servidor, nunca el cliente.
