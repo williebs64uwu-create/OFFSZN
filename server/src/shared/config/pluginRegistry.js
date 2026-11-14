@@ -39,7 +39,7 @@ export const PLUGINS = [
     // La app manda plugin_name = 'OFFSZN Widget' en /request-trial, /activate y /validate.
     // STAR CHAIN (agente de mezcla vocal STAR): IDs de tienda con STAR_PRODUCT_IDS (coma-separados) cuando exista en `products`.
     { id: 'star-chain', prefix: 'STAR', displayName: 'STAR CHAIN', names: ['star chain', 'starchain'], keywords: ['star chain', 'starchain'], productIds: idsFromEnv('STAR_PRODUCT_IDS').length ? idsFromEnv('STAR_PRODUCT_IDS') : [5003], trialDays: 3, exclusive: true },
-    { id: 'offszn-widget', prefix: 'WIDGET', displayName: 'OFFSZN Widget', names: ['offszn widget', 'widget'], keywords: ['widget'], productIds: idsFromEnv('WIDGET_PRODUCT_IDS'), trialDays: 3, exclusive: true }
+    { id: 'offszn-widget', prefix: 'WIDGET', displayName: 'OFFSZN Widget', names: ['offszn widget', 'widget'], keywords: ['widget'], productIds: idsFromEnv('WIDGET_PRODUCT_IDS').length ? idsFromEnv('WIDGET_PRODUCT_IDS') : [5004], trialDays: 3, exclusive: true }
 ];
 
 export const DEFAULT_PLUGIN = PLUGINS[0]; // Easy Mix: comportamiento histórico cuando no se indica plugin

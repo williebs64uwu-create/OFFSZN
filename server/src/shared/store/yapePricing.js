@@ -30,7 +30,7 @@ export const YAPE_PRICES = {
 };
 export const PROMO_2X1_PRICES = [17, 25];
 export const PROMO_2X1_PRODUCT_IDS = ['899', '901', 'promo-2x1']; // la promo solo se cobra desde su página (Easy Mix + Easy Master de regalo)
-export const WIDGET_PRICES = [5];
+export const WIDGET_PRICES = [9];   // OFFSZN Widget: 9 USD (antes 20, tachado en la página)
 
 export const pricesForProduct = (productId, { isPromo2x1 = false, widgetIds = [] } = {}) => {
     const id = String(productId ?? '');

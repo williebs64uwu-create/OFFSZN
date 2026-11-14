@@ -19,8 +19,16 @@ class PluginDirectCheckout {
         const isOmni = this.productId === 5001 || window.PLUGIN_NAME === 'Omni Plugin' || window.PLUGIN_NAME === 'Omni' || window.PLUGIN_NAME === 'OMNI';
         const isCassette = this.productId === 5002 || (window.PLUGIN_NAME && window.PLUGIN_NAME.toLowerCase().includes('cassette'));
         const isStar = this.productId === 5003 || window.PLUGIN_NAME === 'STAR CHAIN';
+        const isWidget = window.PLUGIN_NAME === 'OFFSZN Widget';
 
-        if (isStar) {
+        if (isWidget) {
+            // Solo Windows. El enlace lo pone la página (plugins/offszn-widget.html); si falta, "Mis compras".
+            this.downloads = {
+                name: 'OFFSZN Widget',
+                win: window.WIDGET_DOWNLOAD_URL || '/mis-compras',
+                mac: ''
+            };
+        } else if (isStar) {
             // Windows y macOS: archivos en Drive (los mismos links de server/src/shared/config/starDelivery.js).
             const STAR_WIN_LINK = 'https://drive.google.com/file/d/12RKOCJQ5I9a1tjx3NPJeDO1bkyT8v-xE/view?usp=sharing';
             this.downloads = {
@@ -668,7 +676,7 @@ class PluginDirectCheckout {
                     </div>
                     <h2 class="plugin-modal-title">¡Compra Completada!</h2>
                     <p class="plugin-modal-desc">
-                        ¡Gracias por adquirir <b>${this.downloads.name}</b>! Aquí tienes tu Serial Key FULL para activar el plugin en tu DAW:
+                        ¡Gracias por adquirir <b>${this.downloads.name}</b>! Aquí tienes tu Serial Key FULL para activar ${this.downloads.name === 'OFFSZN Widget' ? 'el widget (click en «Activar», arriba en el widget)' : 'el plugin en tu DAW'}:
                     </p>
 
                     <div class="plugin-key-container">
