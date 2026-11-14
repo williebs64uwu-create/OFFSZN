@@ -1,124 +1,271 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="es" data-theme-lock="light">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="theme-color" content="#eef1f6">
     <title>Diagnóstico de tu voz | Willie Inspired</title>
     <meta name="description" content="Responde 4 preguntas y mira qué le falta a tu voz para encajar en el beat. Te regalo un preset gratis.">
     <meta name="robots" content="noindex">
+    <meta property="og:title" content="No culpes al micrófono">
+    <meta property="og:description" content="Diagnóstico de voz gratis en 1 minuto, con preset de regalo.">
+    <meta property="og:image" content="/willieinspired/assets/diagnostico/preset-nativo.jpg">
     <link rel="icon" type="image/x-icon" href="/willieimages/favicon.ico">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700;12..96,800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <link rel="stylesheet" href="/willieinspired/assets/store.css?v=5">
     <style>
-        /* ── Diagnóstico de voz · selección estilo Duolingo + Apple ───────────────── */
-        body.dx-run { overflow: hidden; }
-        body.dx-run .wi-announce, body.dx-run .wi-header, body.dx-run .wi-footer, body.dx-run .wi-wa { display: none !important; }
-        body:not(.dx-run) .dx { display: none; }
-        body.dx-run #result { display: none; }
+        /* Diagnóstico de voz · estructura y estilo tomados de una página de plan con quiz (fondo claro, tarjeta blanca sobre
+           tarjetas oscuras de «hoja de ruta», filas con círculo y flecha). Textos, marca y productos: de Willie Inspired. */
+        :root {
+            --bg: #eef1f6; --surface: #fff; --surface-2: #f6f8fb;
+            --ink: #0c1424; --ink-soft: #3b4658; --muted: #707b8c;
+            --line: #e4e9f1; --line-strong: #d2dae6;
+            --accent: #ec4899; --accent-ink: #db2777; --accent-tint: #fdf2f8;
+            --green: #00b886; --green-tint: #e6f8f2; --amber: #f59e0b;
+            --navy: #0e1730; --navy-2: #16213f;
+            --shadow-md: 0 12px 30px -10px rgba(12,20,36,.18), 0 4px 10px -4px rgba(12,20,36,.08);
+            --shadow-lg: 0 30px 60px -20px rgba(12,20,36,.28);
+            --r: 18px;
+            --display: 'Bricolage Grotesque', 'Plus Jakarta Sans', system-ui, sans-serif;
+            --text: 'Plus Jakarta Sans', system-ui, sans-serif;
+            --ease: cubic-bezier(.16, 1, .3, 1);
+        }
+        html, body { background: var(--bg); }
+        body { margin: 0; color: var(--ink); font-family: var(--text); -webkit-font-smoothing: antialiased; overflow-x: hidden; }
+        /* oculta la cabecera, el pie y los cajones que inyecta store.js: el funnel va solo */
+        body > .wi-announce, body > .wi-header, body > .wi-footer, body > .wi-wa, body > .wi-backdrop, body > .wi-drawer, body > .wi-search, body > .wi-loader { display: none !important; }
+        .ib * { box-sizing: border-box; }
+        :where(.ib) button { font-family: inherit; color: inherit; cursor: pointer; border: 0; background: none; -webkit-tap-highlight-color: transparent; touch-action: manipulation; }
+        :where(.ib) a { color: inherit; }
+        :where(.ib) :focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
 
-        .dx { position: fixed; inset: 0; z-index: 900; background: var(--bg); background-image: var(--noise); display: flex; flex-direction: column; }
-        .dx-top { display: flex; align-items: center; gap: 14px; padding: calc(14px + env(safe-area-inset-top)) var(--gutter) 10px; max-width: 760px; width: 100%; margin: 0 auto; }
-        .dx-x { width: 40px; height: 40px; flex: none; border-radius: 50%; display: grid; place-items: center; color: var(--subtle); font-size: 1.25rem; transition: color .15s, background-color .15s; }
-        .dx-x:hover { color: var(--ink); background: var(--soft); }
-        .dx-x[hidden] { visibility: hidden; display: grid; }
-        .dx-bar { flex: 1; height: 16px; border-radius: 999px; background: var(--soft); overflow: hidden; position: relative; }
-        .dx-bar i { position: absolute; inset: 0; border-radius: 999px; background: var(--accent); transform-origin: left center; transform: scaleX(0); transition: transform .5s var(--ease); will-change: transform; }
-        .dx-bar i::after { content: ""; position: absolute; left: 10px; right: 10px; top: 4px; height: 4px; border-radius: 4px; background: rgba(255,255,255,.35); }
-        .dx-main { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; overscroll-behavior: contain; }
-        .dx-stage { max-width: 760px; margin: 0 auto; padding: 18px var(--gutter) 40px; }
+        /* Píldora fija de arriba */
+        .ib-pill { position: fixed; z-index: 50; top: 10px; left: 50%; transform: translateX(-50%); display: flex; align-items: center; gap: 10px; padding: 7px 16px 7px 8px; border-radius: 999px; background: var(--surface); box-shadow: var(--shadow-md); border: 1px solid var(--line); white-space: nowrap; max-width: calc(100vw - 24px); }
+        .ib-pill-ico { width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center; background: linear-gradient(135deg, var(--accent), #8b5cf6); color: #fff; font-size: 1rem; flex: none; }
+        .ib-pill-ico i { display: block; line-height: 1; color: #fff; font-size: 1rem; }
+        .ib-pill b { display: block; font-size: .78rem; line-height: 1.2; font-weight: 700; }
+        .ib-pill b em { font-style: normal; color: var(--accent-ink); }
+        .ib-pill span { display: block; font-size: .7rem; color: var(--muted); font-weight: 500; }
 
-        .dx-step { animation: dxIn .38s var(--ease) both; }
-        @keyframes dxIn { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
+        .ib { padding: 78px 18px 48px; }
+        .ib-wrap { max-width: 720px; margin: 0 auto; }
+        .ib-h1 { font-family: var(--display); font-weight: 800; font-size: clamp(1.75rem, 6.2vw, 2.7rem); line-height: 1.1; letter-spacing: -.025em; text-align: center; text-wrap: balance; margin: 14px auto 0; max-width: 20em; }
+        .ib-h1 em { font-style: normal; color: var(--accent-ink); }
 
-        .dx-q { font-size: clamp(1.55rem, 4.6vw, 2.2rem); font-weight: 900; letter-spacing: -.035em; line-height: 1.1; }
-        .dx-hint { margin-top: 8px; color: var(--muted); font-size: .98rem; }
-        .dx-opts { display: grid; gap: 12px; margin-top: 24px; }
+        /* Hoja de ruta de adorno (tarjetas oscuras detrás de la tarjeta) */
+        .ib-mock { position: relative; height: 240px; margin: 26px auto 0; max-width: 680px; -webkit-mask-image: linear-gradient(#000 52%, transparent 96%); mask-image: linear-gradient(#000 52%, transparent 96%); pointer-events: none; user-select: none; }
+        .mk { position: absolute; top: 0; background: linear-gradient(160deg, var(--navy-2), var(--navy)); color: #e8edf8; border-radius: 22px; padding: 14px 16px; border: 1px solid rgba(255,255,255,.08); box-shadow: var(--shadow-lg); font-size: .72rem; line-height: 1.35; overflow: hidden; }
+        .mk-c { left: 50%; width: min(290px, 60%); transform: translateX(-50%); z-index: 3; }
+        .mk-l { left: 0; width: min(270px, 52%); top: 30px; transform: scale(.94); transform-origin: left top; z-index: 2; opacity: .92; }
+        .mk-r { right: 0; width: min(270px, 52%); top: 30px; transform: scale(.94); transform-origin: right top; z-index: 2; opacity: .92; }
+        .mk-top { display: flex; align-items: center; gap: 7px; color: #8fa0c4; font-size: .66rem; }
+        .mk-logo { width: 20px; height: 20px; border-radius: 6px; background: var(--accent); color: #fff; display: grid; place-items: center; font-weight: 800; font-size: .6rem; }
+        .mk-title { display: flex; align-items: center; gap: 8px; margin-top: 10px; font-family: var(--display); font-weight: 700; font-size: 1.05rem; color: #fff; }
+        .mk-title i { width: 22px; height: 22px; border-radius: 7px; background: rgba(255,255,255,.1); display: grid; place-items: center; font-size: .75rem; font-style: normal; }
+        .mk-box { margin-top: 10px; padding: 10px; border-radius: 14px; background: rgba(255,255,255,.05); border: 1px solid rgba(255,255,255,.07); }
+        .mk-ring { display: flex; gap: 12px; align-items: center; margin-top: 8px; }
+        .mk-dial { width: 62px; height: 62px; flex: none; border-radius: 50%; background: conic-gradient(var(--accent) 0 50%, rgba(255,255,255,.12) 50% 100%); display: grid; place-items: center; }
+        .mk-dial span { width: 48px; height: 48px; border-radius: 50%; background: var(--navy-2); display: grid; place-items: center; font-family: var(--display); font-weight: 800; font-size: 1.1rem; color: #fff; }
+        .mk-leg { display: grid; gap: 4px; white-space: nowrap; }
+        .mk-leg div { display: flex; align-items: center; gap: 6px; }
+        .mk-leg i { width: 8px; height: 8px; border-radius: 2px; background: var(--green); display: inline-block; }
+        .mk-leg i.b { background: var(--accent); } .mk-leg i.g { background: #5b6b8c; }
+        .mk-rows { display: grid; gap: 7px; margin-top: 10px; }
+        .mk-row { display: flex; align-items: center; gap: 9px; padding: 8px 9px; border-radius: 12px; background: rgba(255,255,255,.05); }
+        .mk-row .ic { width: 24px; height: 24px; border-radius: 8px; background: rgba(255,255,255,.1); display: grid; place-items: center; flex: none; font-size: .78rem; }
+        .mk-row b { display: block; color: #fff; font-size: .74rem; }
+        .mk-row small { color: #8fa0c4; font-size: .64rem; }
+        .mk-tag { margin-left: auto; font-size: .62rem; font-weight: 700; padding: 2px 7px; border-radius: 99px; background: rgba(0,184,134,.18); color: #3be0b4; flex: none; }
+        .mk-tag.n { background: rgba(236,72,153,.22); color: #ff8fc4; } .mk-tag.p { background: rgba(255,255,255,.08); color: #8fa0c4; }
+        .mk-warn { margin-top: 10px; padding: 9px 10px; border-radius: 12px; background: rgba(245,158,11,.14); border: 1px solid rgba(245,158,11,.3); color: #fcd9a0; }
 
-        /* Tarjeta con «suelo»: se hunde al tocarla */
-        .dx-opt { position: relative; display: flex; align-items: center; gap: 14px; width: 100%; text-align: left; padding: 15px 16px; border-radius: 18px; background: var(--surface); border: 2px solid var(--line-strong); box-shadow: 0 4px 0 var(--line-strong); font-size: 1.02rem; font-weight: 700; color: var(--ink); cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action: manipulation; transition: transform .1s var(--ease), box-shadow .1s var(--ease), border-color .18s, background-color .18s; }
-        .dx-opt:active { transform: translateY(4px); box-shadow: 0 0 0 var(--line-strong); }
-        .dx-ico { width: 44px; height: 44px; flex: none; border-radius: 14px; display: grid; place-items: center; font-size: 1.3rem; background: var(--soft); color: var(--muted); transition: background-color .18s, color .18s; }
-        .dx-txt { flex: 1; min-width: 0; line-height: 1.25; }
-        .dx-txt small { display: block; margin-top: 3px; font-size: .84rem; font-weight: 500; color: var(--muted); }
-        .dx-key { flex: none; width: 26px; height: 26px; border-radius: 8px; border: 2px solid var(--line-strong); display: none; place-items: center; font-size: .74rem; font-weight: 800; color: var(--subtle); }
-        @media (hover: hover) and (min-width: 700px) { .dx-key { display: grid; } .dx-opt:hover { border-color: var(--ink); } }
-        .dx-check { position: absolute; right: 14px; top: 50%; width: 26px; height: 26px; margin-top: -13px; border-radius: 50%; background: var(--accent); color: #fff; display: grid; place-items: center; font-size: .95rem; transform: scale(0); transition: transform .38s cubic-bezier(.34, 1.56, .64, 1); }
-        .dx-opt[aria-checked="true"] { border-color: var(--accent); background: var(--accent-soft); box-shadow: 0 4px 0 var(--accent); }
-        .dx-opt[aria-checked="true"]:active { box-shadow: 0 0 0 var(--accent); }
-        .dx-opt[aria-checked="true"] .dx-ico { background: var(--accent); color: #fff; }
-        .dx-opt[aria-checked="true"] .dx-check { transform: scale(1); }
-        .dx-opt[aria-checked="true"] .dx-key { visibility: hidden; }
-        .dx-opt:focus-visible, .dx-go:focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; }
+        /* Tarjeta blanca del quiz */
+        .ib-card { position: relative; z-index: 5; max-width: 560px; margin: -62px auto 0; background: var(--surface); border: 1px solid var(--line); border-radius: 24px; box-shadow: var(--shadow-lg); overflow: hidden; }
+        .ib-prog { height: 4px; background: var(--line); }
+        .ib-prog i { display: block; height: 100%; background: var(--accent); width: 0; transition: width .5s var(--ease); }
+        .ib-body { padding: 22px 20px 20px; }
+        .ib-step { animation: ibIn .36s var(--ease) both; }
+        @keyframes ibIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+        .ib-back { display: inline-flex; align-items: center; gap: 4px; margin: -6px 0 8px -6px; padding: 6px; font-size: .82rem; font-weight: 600; color: var(--muted); border-radius: 8px; }
+        .ib-back:hover { color: var(--ink); }
+        .ib-back[hidden] { display: none; }
+        .ib-q { font-family: var(--display); font-weight: 700; font-size: 1.3rem; line-height: 1.2; letter-spacing: -.015em; margin: 0; }
+        .ib-hint { margin: 6px 0 0; font-size: .86rem; color: var(--muted); }
+        .ib-opts { display: grid; gap: 10px; margin-top: 16px; }
+        .ib-opt { display: flex; align-items: center; gap: 12px; width: 100%; text-align: left; padding: 12px 16px; min-height: 52px; border-radius: var(--r); background: var(--surface); border: 1px solid var(--line-strong); font-size: .95rem; font-weight: 600; transition: border-color .18s, background-color .18s, box-shadow .18s, transform .1s var(--ease); }
+        .ib-opt:hover { border-color: var(--accent); box-shadow: 0 6px 18px -10px rgba(219,39,119,.5); }
+        .ib-opt:active { transform: scale(.985); }
+        .ib-circ { width: 22px; height: 22px; flex: none; border-radius: 50%; border: 2px solid var(--line-strong); display: grid; place-items: center; color: #fff; font-size: .78rem; transition: background-color .18s, border-color .18s; }
+        .ib-opt[role="checkbox"] .ib-circ { border-radius: 7px; }
+        .ib-circ i { transform: scale(0); transition: transform .35s cubic-bezier(.34, 1.56, .64, 1); }
+        .ib-lbl { flex: 1; min-width: 0; line-height: 1.25; }
+        .ib-lbl small { display: block; margin-top: 2px; font-size: .78rem; font-weight: 500; color: var(--muted); }
+        .ib-arrow { flex: none; color: var(--line-strong); font-size: .95rem; transition: color .18s, transform .18s var(--ease); }
+        .ib-opt:hover .ib-arrow { color: var(--accent-ink); transform: translateX(2px); }
+        .ib-opt[aria-checked="true"] { border-color: var(--accent); background: var(--accent-tint); }
+        .ib-opt[aria-checked="true"] .ib-circ { background: var(--accent); border-color: var(--accent); }
+        .ib-opt[aria-checked="true"] .ib-circ i { transform: scale(1); }
+        .ib-opt[aria-checked="true"] .ib-arrow { color: var(--accent-ink); }
+        .ib-cta { display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; min-height: 54px; margin-top: 16px; padding: 0 22px; border-radius: 999px; background: var(--accent); color: #fff; font-weight: 800; font-size: .98rem; text-decoration: none; box-shadow: 0 16px 34px -12px rgba(236,72,153,.75); transition: transform .12s var(--ease), background-color .2s, opacity .2s, box-shadow .2s; }
+        .ib-cta:hover { background: var(--accent-ink); }
+        .ib-cta:active { transform: scale(.98); }
+        .ib-cta[disabled] { background: var(--line); color: var(--muted); box-shadow: none; cursor: not-allowed; }
+        .ib-cta--ink { background: var(--ink); box-shadow: 0 16px 34px -14px rgba(12,20,36,.7); } .ib-cta--ink:hover { background: #1b2840; }
+        .ib-cta--wa { background: #25d366; box-shadow: 0 16px 34px -12px rgba(37,211,102,.75); } .ib-cta--wa:hover { background: #1fb858; }
+        .ib-cta--ghost { background: var(--surface); color: var(--ink); border: 1px solid var(--line-strong); box-shadow: none; } .ib-cta--ghost:hover { border-color: var(--ink); background: var(--surface); }
+        .ib-link { display: block; margin: 12px auto 0; padding: 8px; font-size: .86rem; font-weight: 600; color: var(--muted); text-decoration: underline; text-underline-offset: 4px; }
+        .ib-center { text-align: center; }
+        .ib-eyebrow { font-size: .7rem; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; color: var(--accent-ink); }
+        .ib-chip { display: inline-block; padding: 4px 11px; border-radius: 99px; font-size: .72rem; font-weight: 800; background: var(--green-tint); color: #008a66; }
 
-        /* Barra inferior fija */
-        .dx-foot { border-top: 2px solid var(--line); background: var(--surface); padding: 14px var(--gutter) calc(14px + env(safe-area-inset-bottom)); transition: transform .3s var(--ease); }
-        .dx-foot[hidden] { display: block; transform: translateY(110%); pointer-events: none; }
-        .dx-foot-in { max-width: 760px; margin: 0 auto; display: flex; justify-content: flex-end; }
-        .dx-go { width: 100%; min-height: 56px; border-radius: 16px; background: var(--accent); color: #fff; font-weight: 900; font-size: 1.02rem; letter-spacing: .06em; text-transform: uppercase; box-shadow: 0 5px 0 var(--accent-ink); transition: transform .1s var(--ease), box-shadow .1s var(--ease), opacity .2s, background-color .2s; }
-        .dx-go:active:not([disabled]) { transform: translateY(5px); box-shadow: 0 0 0 var(--accent-ink); }
-        .dx-go[disabled] { background: var(--soft); color: var(--subtle); box-shadow: 0 5px 0 var(--line); cursor: not-allowed; }
-        @media (min-width: 700px) { .dx-go { width: auto; min-width: 240px; } }
+        /* Cargando */
+        .ib-ring { width: 56px; height: 56px; margin: 12px auto 18px; border-radius: 50%; border: 5px solid var(--line); border-top-color: var(--accent); animation: ibSpin .9s linear infinite; }
+        @keyframes ibSpin { to { transform: rotate(360deg); } }
+        .ib-check { display: grid; gap: 10px; margin: 18px auto 6px; max-width: 300px; text-align: left; }
+        .ib-check div { display: flex; align-items: center; gap: 10px; font-size: .9rem; font-weight: 600; color: var(--line-strong); transition: color .3s; }
+        .ib-check div i { font-size: 1.1rem; }
+        .ib-check div.on { color: var(--ink); } .ib-check div.on i { color: var(--green); }
 
-        /* Intro, carga y regalo */
-        .dx-center { text-align: center; padding-top: clamp(8px, 4vh, 40px); }
-        .dx-center .wi-h1 { font-size: clamp(2.2rem, 8vw, 3.8rem); margin-top: 14px; }
-        .dx-center .wi-lead { margin: 16px auto 0; }
-        .dx-center .dx-go { margin-top: 28px; max-width: 420px; }
-        .dx-list { display: grid; gap: 10px; margin: 26px auto 0; max-width: 420px; text-align: left; }
-        .dx-list div { display: flex; gap: 12px; align-items: center; font-weight: 600; }
-        .dx-list i { color: var(--accent-ink); font-size: 1.2rem; }
-        .dx-ring { width: 74px; height: 74px; margin: 40px auto 22px; border-radius: 50%; border: 7px solid var(--soft); border-top-color: var(--accent); animation: dxSpin .9s linear infinite; }
-        @keyframes dxSpin { to { transform: rotate(360deg); } }
-        .dx-form { display: grid; gap: 12px; max-width: 440px; margin: 24px auto 0; }
-        .dx-input { width: 100%; min-height: 56px; padding: 0 18px; border-radius: 16px; border: 2px solid var(--line-strong); background: var(--surface); color: var(--ink); font-size: 16px; font-weight: 600; box-shadow: 0 4px 0 var(--line-strong); }
-        .dx-input:focus { outline: none; border-color: var(--accent); box-shadow: 0 4px 0 var(--accent); }
-        .dx-skip { margin-top: 6px; font-weight: 700; color: var(--muted); text-decoration: underline; text-underline-offset: 4px; padding: 10px; }
-        .dx-msg { min-height: 1.2em; font-size: .9rem; font-weight: 600; color: var(--warn); }
-        .dx-msg.is-ok { color: var(--success); }
-        .dx-hp { position: absolute; left: -9999px; width: 1px; height: 1px; opacity: 0; }
+        /* Correo */
+        .ib-input { width: 100%; min-height: 54px; margin-top: 16px; padding: 0 18px; border-radius: var(--r); border: 1px solid var(--line-strong); background: var(--surface); color: var(--ink); font: 600 16px var(--text); }
+        .ib-input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 4px rgba(236,72,153,.15); }
+        .ib-msg { min-height: 1.3em; margin-top: 8px; font-size: .84rem; font-weight: 600; color: #b45309; text-align: center; }
+        .ib-msg.ok { color: #008a66; }
+        .ib-hp { position: absolute; left: -9999px; width: 1px; height: 1px; opacity: 0; }
+
+        .ib-priv { max-width: 560px; margin: 18px auto 0; text-align: center; font-size: .72rem; line-height: 1.55; color: var(--muted); }
+        .ib-priv a { text-decoration: underline; text-underline-offset: 2px; font-weight: 600; }
+        .ib-bul { list-style: none; padding: 0; max-width: 560px; margin: 22px auto 0; display: grid; gap: 10px; font-size: .9rem; font-weight: 600; color: var(--ink-soft); }
+        .ib-bul li { display: flex; gap: 10px; align-items: baseline; }
+        .ib-bul li::before { content: ""; width: 7px; height: 7px; flex: none; background: var(--accent); transform: rotate(45deg) translateY(-1px); border-radius: 1px; }
 
         /* Resultado */
-        .dx-res { padding-top: clamp(28px, 6vw, 64px); }
-        .dx-grid { display: grid; gap: 14px; }
-        .dx-road { display: grid; gap: 12px; margin-top: 22px; }
-        .dx-road li { list-style: none; display: flex; gap: 14px; align-items: flex-start; padding: 16px; border-radius: 18px; background: var(--surface); border: 1px solid var(--line); }
-        .dx-n { flex: none; width: 36px; height: 36px; border-radius: 50%; background: var(--ink); color: var(--on-ink); display: grid; place-items: center; font-weight: 900; }
-        .dx-road b { display: block; font-size: 1.02rem; letter-spacing: -.01em; }
-        .dx-road p { margin-top: 3px; color: var(--muted); font-size: .94rem; }
-        .dx-prod { display: flex; gap: 14px; align-items: center; padding: 14px; border-radius: 18px; background: var(--surface); border: 1px solid var(--line); text-decoration: none; color: inherit; transition: transform .2s var(--ease), border-color .2s; }
-        .dx-prod:hover { border-color: var(--ink); transform: translateY(-2px); }
-        .dx-prod .dx-ph { width: 64px; height: 64px; flex: none; border-radius: 14px; overflow: hidden; background: var(--soft); display: grid; place-items: center; color: var(--subtle); font-size: 1.6rem; }
-        .dx-prod .dx-ph img { width: 100%; height: 100%; object-fit: cover; }
-        .dx-prod b { display: block; }
-        .dx-prod small { display: block; color: var(--muted); margin-top: 2px; }
-        .dx-two { display: grid; gap: 14px; margin-top: 18px; }
-        @media (min-width: 760px) { .dx-two { grid-template-columns: 1fr 1fr; } .dx-grid.cols { grid-template-columns: 1fr 1fr; } }
+        .ib-res { display: none; max-width: 640px; margin: 22px auto 0; gap: 16px; }
+        body.is-result .ib-res { display: grid; }
+        body.is-result .ib-mock, body.is-result #card, body.is-result .ib-bul-wrap { display: none; }
+        .ib-panel { background: var(--surface); border: 1px solid var(--line); border-radius: 24px; padding: 22px 20px; box-shadow: var(--shadow-md); animation: ibIn .4s var(--ease) both; }
+        .ib-panel h2 { font-family: var(--display); font-weight: 800; font-size: 1.45rem; line-height: 1.15; letter-spacing: -.02em; margin: 8px 0 0; }
+        .ib-panel p { margin: 8px 0 0; color: var(--ink-soft); font-size: .93rem; line-height: 1.55; }
+        .ib-stages { list-style: none; margin: 16px 0 0; padding: 0; display: grid; gap: 10px; }
+        .ib-stages li { display: flex; gap: 12px; align-items: flex-start; padding: 13px 14px; border: 1px solid var(--line); border-radius: 16px; background: var(--surface-2); }
+        .ib-n { width: 30px; height: 30px; flex: none; border-radius: 50%; background: var(--ink); color: #fff; display: grid; place-items: center; font-weight: 800; font-size: .85rem; }
+        .ib-stages b { display: block; font-size: .95rem; }
+        .ib-stages small { display: block; margin-top: 2px; font-size: .84rem; line-height: 1.45; color: var(--ink-soft); }
+        .ib-tag { margin-left: auto; flex: none; font-size: .68rem; font-weight: 800; padding: 3px 9px; border-radius: 99px; background: var(--accent-tint); color: var(--accent-ink); }
+        .ib-tag.g { background: var(--line); color: var(--muted); }
+        .ib-gift { display: flex; gap: 12px; align-items: center; padding: 14px 16px; border-radius: 18px; background: var(--green-tint); color: #006b4f; font-size: .9rem; font-weight: 600; }
+        .ib-gift i { font-size: 1.4rem; }
+        .ib-rec { display: grid; gap: 16px; background: linear-gradient(160deg, var(--navy-2), var(--navy)); color: #e8edf8; border-radius: 24px; padding: 20px; box-shadow: var(--shadow-lg); animation: ibIn .4s var(--ease) both; }
+        .ib-rec h2 { font-family: var(--display); font-weight: 800; font-size: 1.5rem; line-height: 1.12; letter-spacing: -.02em; margin: 8px 0 0; color: #fff; }
+        .ib-rec p { margin: 8px 0 0; color: #b6c2dc; font-size: .93rem; line-height: 1.5; }
+        .ib-rec .ib-eyebrow { color: #ff8fc4; }
+        .ib-rec img { width: 100%; aspect-ratio: 16/9; object-fit: cover; border-radius: 16px; background: var(--navy); }
+        .ib-price { font-family: var(--display); font-weight: 800; font-size: 1.9rem; color: #fff; margin-top: 12px; }
+        .ib-price s { font-size: 1rem; color: #7c8aab; font-weight: 600; margin-left: 8px; }
+        @media (min-width: 640px) { .ib-rec { grid-template-columns: 1fr 1fr; align-items: center; } .ib-rec img { order: 2; } }
+        .ib-two { display: grid; gap: 12px; }
+        .ib-handoff { text-align: center; }
+        .ib-handoff .ib-cta { margin-top: 12px; }
 
-        @media (prefers-reduced-motion: reduce) {
-            .dx-step { animation: none; }
-            .dx-opt, .dx-check, .dx-go, .dx-bar i, .dx-foot, .dx-prod { transition: none; }
-            .dx-ring { animation-duration: 2.4s; }
-        }
+        /* Carrusel de productos */
+        .ib-sec { max-width: 720px; margin: 46px auto 0; }
+        .ib-sec-h { text-align: center; }
+        .ib-sec-h small { font-size: .68rem; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); }
+        .ib-sec-h h2 { font-family: var(--display); font-weight: 800; font-size: 1.35rem; letter-spacing: -.02em; margin: 6px 0 0; }
+        .ib-rail { display: flex; gap: 12px; overflow-x: auto; scroll-snap-type: x proximity; padding: 18px 18px 8px; margin: 0 -18px; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
+        .ib-rail::-webkit-scrollbar { display: none; }
+        .ib-pc { flex: none; width: 232px; scroll-snap-align: start; display: block; text-decoration: none; background: var(--surface); border: 1px solid var(--line); border-radius: 18px; overflow: hidden; box-shadow: var(--shadow-md); transition: transform .2s var(--ease); }
+        .ib-pc:hover { transform: translateY(-3px); }
+        .ib-pc .th { aspect-ratio: 16/9; background: var(--navy); display: grid; place-items: center; color: #5b6b8c; font-size: 2rem; overflow: hidden; }
+        .ib-pc .th img { width: 100%; height: 100%; object-fit: cover; }
+        .ib-pc div.t { padding: 11px 13px 13px; }
+        .ib-pc b { display: block; font-size: .86rem; line-height: 1.25; }
+        .ib-pc small { display: block; margin-top: 3px; font-size: .78rem; font-weight: 700; color: var(--accent-ink); }
+
+        .ib-foot { max-width: 720px; margin: 50px auto 0; text-align: center; }
+        .ib-mark { font-family: var(--display); font-weight: 800; font-size: clamp(2.2rem, 11vw, 4.2rem); letter-spacing: -.04em; line-height: 1; color: rgba(12,20,36,.07); user-select: none; }
+        .ib-pills { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; margin-top: 10px; }
+        .ib-pills a { padding: 6px 14px; border-radius: 99px; background: var(--surface); border: 1px solid var(--line-strong); font-size: .7rem; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; text-decoration: none; color: var(--ink-soft); }
+        .ib-foot p { margin: 14px 0 0; font-size: .72rem; color: var(--muted); }
+
+        @media (max-width: 520px) { .mk-l, .mk-r { width: 56%; } .mk-c { width: 64%; } .ib-mock { height: 220px; } }
+        @media (prefers-reduced-motion: reduce) { .ib-step, .ib-panel, .ib-rec { animation: none; } .ib-prog i, .ib-circ i, .ib-opt, .ib-cta, .ib-pc { transition: none; } .ib-ring { animation-duration: 2.4s; } }
     </style>
 </head>
-<body class="dx-run">
-
-<!-- Flujo de preguntas (pantalla completa, sin cabecera de la tienda) -->
-<div class="dx" id="dx" role="dialog" aria-modal="true" aria-label="Diagnóstico de tu voz">
-    <div class="dx-top">
-        <a class="dx-x" id="dxX" href="/willieinspired" aria-label="Salir del diagnóstico" data-sfx="swoosh"><i class="bi bi-x-lg"></i></a>
-        <div class="dx-bar" role="progressbar" aria-label="Progreso" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" id="dxBarWrap"><i id="dxBar"></i></div>
-        <span class="dx-x" aria-hidden="true"></span>
-    </div>
-    <div class="dx-main" id="dxMain"><div class="dx-stage" id="dxStage" aria-live="polite"></div></div>
-    <div class="dx-foot" id="dxFoot" hidden><div class="dx-foot-in"><button type="button" class="dx-go" id="dxGo" data-sfx="swoosh" disabled>Continuar</button></div></div>
+<body>
+<div class="ib-pill" aria-hidden="false">
+    <span class="ib-pill-ico"><i class="bi bi-mic-fill"></i></span>
+    <div><b>Diagnóstico de voz <em>+ preset gratis</em></b><span>4 preguntas · menos de 1 minuto</span></div>
 </div>
 
-<!-- Resultado (con la cabecera y el pie normales de la tienda) -->
-<main id="result" class="wi-section" aria-live="polite"><div class="wi-container dx-res" id="resultBody"></div></main>
+<main class="ib">
+    <div class="ib-wrap">
+        <h1 class="ib-h1" id="ibTitle">No culpes al micrófono: te digo <em>qué le falta a tu voz</em>… en menos de 1 minuto</h1>
+
+        <div class="ib-mock" aria-hidden="true">
+            <div class="mk mk-l">
+                <div class="mk-top"><span class="mk-logo">WI</span> Willie Inspired / Ruta</div>
+                <div class="mk-title"><i>≡</i> Paso 03 · Aire</div>
+                <div class="mk-rows">
+                    <div class="mk-row"><span class="ic">◎</span><div><b>Graves</b><small>Filtro en 70 Hz</small></div></div>
+                    <div class="mk-row"><span class="ic">▣</span><div><b>Compresión</b><small>−4 dB y luego −2 dB</small></div></div>
+                    <div class="mk-row"><span class="ic">◇</span><div><b>De-esser</b><small>De 3 a 5 dB</small></div></div>
+                    <div class="mk-row"><span class="ic">☺</span><div><b>Aire</b><small>8 kHz y 16 kHz</small></div></div>
+                </div>
+            </div>
+            <div class="mk mk-r">
+                <div class="mk-top"><span class="mk-logo">WI</span> Willie Inspired / Pasos</div>
+                <div class="mk-rows">
+                    <div class="mk-row"><div><b>Paso 1 · Limpiar</b><small>70 Hz</small></div><span class="mk-tag">Hecho</span></div>
+                    <div class="mk-row"><div><b>Paso 2 · Comprimir</b><small>−4 / −2 dB</small></div><span class="mk-tag">Hecho</span></div>
+                    <div class="mk-row"><div><b>Paso 3 · Aire</b><small>8k / 16k</small></div><span class="mk-tag n">En curso</span></div>
+                </div>
+                <div class="mk-warn"><b>Ojo:</b> la reverb en la voz la ensucia. Va en un envío con sidechain.</div>
+            </div>
+            <div class="mk mk-c">
+                <div class="mk-top"><span class="mk-logo">WI</span> Willie Inspired / Ruta de mezcla</div>
+                <div class="mk-title"><i>▲</i> Tu Ruta de Mezcla</div>
+                <div class="mk-box">
+                    <div class="mk-top">◔ Progreso de la ruta</div>
+                    <div class="mk-ring">
+                        <div class="mk-dial"><span>03</span></div>
+                        <div class="mk-leg"><div><i></i>Pasos hechos <b>2</b></div><div><i class="b"></i>Paso actual <b>Aire</b></div><div><i class="g"></i>Restantes <b>3</b></div></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <section class="ib-card" id="card" aria-live="polite" aria-label="Diagnóstico de tu voz">
+            <div class="ib-prog" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" id="ibProgWrap"><i id="ibProg"></i></div>
+            <div class="ib-body"><button type="button" class="ib-back" id="ibBack" hidden><i class="bi bi-chevron-left"></i> Volver</button><div id="ibStage"></div></div>
+        </section>
+
+        <section class="ib-res" id="res" aria-live="polite"></section>
+
+        <div class="ib-bul-wrap">
+            <p class="ib-priv">Al dejar tu correo aceptas la <a href="/legal/politicas-de-privacidad.html" target="_blank" rel="noopener">Política de Privacidad</a> y los <a href="/legal/terminos-de-servicio.html" target="_blank" rel="noopener">Términos de Servicio</a>. Solo lo uso para mandarte tu regalo. No vendo tu información.</p>
+            <ul class="ib-bul">
+                <li>Tu diagnóstico paso a paso, en menos de 1 minuto</li>
+                <li>Un preset gratis para grabar tus maquetas con lo que ya trae tu DAW</li>
+                <li>100% gratis, sin tarjeta y sin compromiso</li>
+            </ul>
+        </div>
+
+        <section class="ib-sec" id="shop" hidden>
+            <div class="ib-sec-h"><small>En la tienda</small><h2>Lo que uso para que tu voz suene profesional</h2></div>
+            <div class="ib-rail" id="rail"></div>
+        </section>
+
+        <footer class="ib-foot">
+            <div class="ib-mark" aria-hidden="true">willie inspired</div>
+            <div class="ib-pills"><a href="/willieinspired">Tienda</a><a href="https://instagram.com/willieinspired" target="_blank" rel="noopener">@willieinspired</a></div>
+            <p>© <span id="yr"></span> Willie Inspired · Todos los derechos reservados</p>
+        </footer>
+    </div>
+</main>
 
 <script src="/willieinspired/assets/store.js?v=14"></script>
 <script src="/willieinspired/sfx.js" defer></script>
@@ -126,40 +273,50 @@
 (() => {
     const $ = (s, r = document) => r.querySelector(s);
     const sfx = (n) => { try { window.WISfx && window.WISfx.play(n); } catch (_) {} };
+    const esc = (s) => WI.esc(s);
     const GIFT_ID = 'lead-graba-maquetas-con-nativos';
     const IG = 'https://ig.me/m/willieinspired';
+    const IMG = {
+        'lead-graba-maquetas-con-nativos': 'preset-nativo.jpg',
+        'plantilla-grabacion-y-mezcla-profesional-con-nativos': 'plantilla-grabacion.jpg',
+        'plantilla-grabacion-y-mezcla-profesional': 'plantilla-pro.png',
+        'plugin-easy-mix': 'easy-mix.png'
+    };
+    const img = (p) => (IMG[p.id] ? `/willieinspired/assets/diagnostico/${IMG[p.id]}` : p.media?.cover || '');
+    const price = (p) => { const pr = p.pricing; if (!pr || !pr.usd) return 'Gratis'; const l = pr.local || { amount: pr.usd, currency: 'USD' }; return WI.fmt(l.amount, l.currency); };
+    const was = (p) => { const c = p.pricing?.compareAtLocal; return c ? WI.fmt(c.amount, c.currency) : ''; };
+    $('#yr').textContent = new Date().getFullYear();
 
     // ── Preguntas ───────────────────────────────────────────────────────────
     const Q = [
-        { id: 'pains', multi: true, title: '¿Qué te molesta de tu voz?', hint: 'Marca todas las que te pasen.', opts: [
-            { v: 'beat',   i: 'music-note-beamed', t: 'Mi voz no encaja en el beat', d: 'El beat la tapa o se siente separada' },
-            { v: 'aire',   i: 'wind',              t: 'Se escucha apagada, sin brillo', d: 'Le falta aire' },
-            { v: 's',      i: 'soundwave',         t: 'Las S se clavan en el oído', d: 'Suenan filosas' },
-            { v: 'comp',   i: 'graph-up',          t: 'Sube y baja de volumen', d: 'Unas palabras se pierden' },
-            { v: 'graves', i: 'speaker',           t: 'Retumba o suena embarrada', d: 'Demasiado grave en el micro' },
-            { v: 'fx',     i: 'water',             t: 'Con reverb o delay se ensucia', d: 'El efecto se come la voz' }
+        { id: 'pains', multi: true, title: '¿Qué le molesta a tu oído de tu voz?', hint: 'Marca todas las que te pasen.', opts: [
+            { v: 'beat',   t: 'Mi voz no encaja en el beat', d: 'El beat la tapa o se siente separada' },
+            { v: 'aire',   t: 'Se escucha apagada, sin brillo', d: 'Le falta aire' },
+            { v: 's',      t: 'Las S se clavan en el oído', d: 'Suenan filosas' },
+            { v: 'comp',   t: 'Sube y baja de volumen', d: 'Unas palabras se pierden' },
+            { v: 'graves', t: 'Retumba o suena embarrada', d: 'Demasiado grave en el micro' },
+            { v: 'fx',     t: 'Con reverb o delay se ensucia', d: 'El efecto se come la voz' }
         ] },
         { id: 'nivel', title: '¿Cuánto has mezclado?', hint: 'Sin pena, aquí nadie nace sabiendo.', opts: [
-            { v: 'nunca',  i: 'emoji-smile', t: 'Nunca he mezclado', d: 'Empiezo de cero' },
-            { v: 'basico', i: 'sliders',     t: 'Sé lo básico', d: 'Muevo cosas pero no sé por qué' },
-            { v: 'pulir',  i: 'trophy',      t: 'Ya mezclo, me falta pulirla', d: 'Quiero que suene a disco' }
+            { v: 'nunca',  t: 'Nunca he mezclado' },
+            { v: 'basico', t: 'Sé lo básico, pero no sé por qué muevo cosas' },
+            { v: 'pulir',  t: 'Ya mezclo, me falta pulirla' }
         ] },
-        { id: 'plug', title: '¿Con qué plugins cuentas?', hint: 'Elige el que más se parezca.', opts: [
-            { v: 'nativos',  i: 'lightning',       t: 'Solo los nativos de tu DAW', d: 'Sin instalar nada' },
-            { v: 'terceros', i: 'boxes',           t: 'Tengo plugins de terceros', d: 'Waves, FabFilter y compañía' },
-            { v: 'nose',     i: 'question-circle', t: 'No sé cuáles usar', d: 'Me pierdo entre tantos' }
+        { id: 'plug', title: '¿Con qué plugins cuentas?', hint: 'Así armo la ruta con lo que ya tienes.', opts: [
+            { v: 'nativos',  t: 'Solo los nativos de tu DAW' },
+            { v: 'terceros', t: 'Tengo plugins de terceros (Waves, FabFilter…)' },
+            { v: 'nose',     t: 'No sé cuáles usar' }
         ] },
         { id: 'meta', title: '¿Qué quieres lograr?', hint: 'Te recomiendo según esto.', opts: [
-            { v: 'maquetas', i: 'mic',          t: 'Grabar maquetas rápido', d: 'Oírme bien desde el primer take' },
-            { v: 'pro',      i: 'stars',        t: 'Que mi tema suene profesional', d: 'Mezcla completa, voz al frente' },
-            { v: 'hecho',    i: 'person-check', t: 'Que me lo dejen listo para mi voz', d: 'Tú me lo pruebas antes de pagar' }
+            { v: 'maquetas', t: 'Grabar maquetas rápido' },
+            { v: 'pro',      t: 'Que mi tema suene profesional' },
+            { v: 'hecho',    t: 'Que me lo dejen listo para mi voz' }
         ] }
     ];
-    const STEPS = ['intro', 'q0', 'q1', 'q2', 'q3', 'load', 'gift'];
+    const STEPS = ['q0', 'q1', 'q2', 'q3', 'load', 'gift'];
     const ans = { pains: new Set(), nivel: null, plug: null, meta: null };
-    let idx = 0, catalog = null, gaveEmail = false;
+    let idx = 0, catalog = null, gaveEmail = false, lock = false;
 
-    // ── Ruta de mezcla según lo que marcó ───────────────────────────────────
     const FIX = {
         graves: { t: 'Corta lo que retumba', d: 'Filtro pasa-altos en 70 Hz. Limpia el cuarto sin quitarle cuerpo a la voz.' },
         comp:   { t: 'Aplana los subibajas', d: 'Dos compresores suaves en vez de uno fuerte: primero −4 dB y luego −2 dB de reducción.' },
@@ -177,18 +334,17 @@
         graves: 'Tu voz suena embarrada porque tiene graves de más que no deberían estar.',
         fx:     'Tus efectos ensucian porque están encima de la voz y no en un envío.'
     };
-    function route() {
+    const route = () => {
         const picked = ORDER.filter((k) => ans.pains.has(k));
-        const base = ['graves', 'comp', 'beat'];
-        base.forEach((k) => { if (picked.length < 3 && !picked.includes(k)) picked.push(k); });
-        return picked.slice(0, 5).map((k) => FIX[k]);
-    }
-    function recommended() {
+        ['graves', 'comp', 'beat'].forEach((k) => { if (picked.length < 3 && !picked.includes(k)) picked.push(k); });
+        return ORDER.filter((k) => picked.includes(k)).slice(0, 5).map((k) => FIX[k]);   // siempre en el orden técnico: graves → compresión → S → aire → envíos → beat
+    };
+    const recommended = () => {
         if (ans.meta === 'hecho') return 'servicio-plantilla-personalizada-para-tu-voz';
         if (ans.plug === 'nativos') return 'plantilla-grabacion-y-mezcla-profesional-con-nativos';
         if (ans.nivel === 'nunca') return 'plugin-easy-mix';
         return 'plantilla-grabacion-y-mezcla-profesional';
-    }
+    };
     const WHY = {
         'servicio-plantilla-personalizada-para-tu-voz': 'Me mandas tu voz y yo te preparo la plantilla. La escuchas antes de pagar.',
         'plantilla-grabacion-y-mezcla-profesional-con-nativos': 'Solo usa plugins nativos de tu DAW: la abres, grabas y ya está ruteada.',
@@ -197,188 +353,169 @@
     };
 
     // ── Render ──────────────────────────────────────────────────────────────
-    const stage = $('#dxStage'), main = $('#dxMain'), foot = $('#dxFoot'), go = $('#dxGo'), bar = $('#dxBar'), xBtn = $('#dxX');
-    const esc = (s) => WI.esc(s);
-    function mount(html) {
-        const el = document.createElement('div');
-        el.className = 'dx-step';
-        el.innerHTML = html;
-        stage.replaceChildren(el);
-        main.scrollTop = 0;
-        return el;
-    }
-    function setBar(p) { bar.style.transform = `scaleX(${p})`; $('#dxBarWrap').setAttribute('aria-valuenow', Math.round(p * 100)); }
-    function canGo() {
-        const q = Q[idx - 1];
-        if (!q) return true;
-        return q.multi ? ans[q.id].size > 0 : !!ans[q.id];
-    }
-    function refreshGo() { go.disabled = !canGo(); }
-    function isOn(q, v) { return q.multi ? ans[q.id].has(v) : ans[q.id] === v; }
+    const stage = $('#ibStage'), prog = $('#ibProg'), backBtn = $('#ibBack');
+    const mount = (html) => { const el = document.createElement('div'); el.className = 'ib-step'; el.innerHTML = html; stage.replaceChildren(el); return el; };
+    const setProg = (p) => { prog.style.width = `${Math.round(p * 100)}%`; $('#ibProgWrap').setAttribute('aria-valuenow', Math.round(p * 100)); };
+    const isOn = (q, v) => (q.multi ? ans[q.id].has(v) : ans[q.id] === v);
+    const canGo = () => { const q = Q[idx]; if (!q) return false; return q.multi ? ans[q.id].size > 0 : !!ans[q.id]; };
 
     function render() {
+        lock = false;
         const s = STEPS[idx];
-        foot.hidden = !s.startsWith('q');
-        if (s === 'intro') {
-            setBar(0);
-            mount(`<div class="dx-center">
-                <span class="wi-badge wi-badge--accent">Gratis · 1 minuto</span>
-                <h1 class="wi-h1">No culpes al micrófono.</h1>
-                <p class="wi-lead">Mismo micro. Mismo cuarto. Lo que cambia es lo que haces después de grabar. Responde 4 preguntas y te digo qué le falta a tu voz.</p>
-                <div class="dx-list">
-                    <div><i class="bi bi-check-circle-fill"></i>Tu diagnóstico paso a paso</div>
-                    <div><i class="bi bi-check-circle-fill"></i>Un preset gratis para grabar maquetas</div>
-                    <div><i class="bi bi-check-circle-fill"></i>Qué te conviene, sin venderte de más</div>
-                </div>
-                <button type="button" class="dx-go" id="dxStart" data-sfx="swoosh">Empezar el diagnóstico</button>
-            </div>`);
-            $('#dxStart').onclick = () => { WI.track('popup_click', { meta: { step: 'start' } }); next(); };
-        } else if (s.startsWith('q')) {
-            const qi = idx - 1, q = Q[qi];
-            setBar((qi + 0.4) / (Q.length + 1));
-            const el = mount(`<h2 class="dx-q">${esc(q.title)}</h2><p class="dx-hint">${esc(q.hint)}</p>
-                <div class="dx-opts" role="${q.multi ? 'group' : 'radiogroup'}" aria-label="${esc(q.title)}">${q.opts.map((o, n) => `
-                    <button type="button" class="dx-opt" role="${q.multi ? 'checkbox' : 'radio'}" aria-checked="${isOn(q, o.v)}" data-v="${o.v}" data-sfx="pop">
-                        <span class="dx-ico"><i class="bi bi-${o.i}"></i></span>
-                        <span class="dx-txt">${esc(o.t)}<small>${esc(o.d)}</small></span>
-                        <span class="dx-key" aria-hidden="true">${n + 1}</span>
-                        <span class="dx-check" aria-hidden="true"><i class="bi bi-check-lg"></i></span>
-                    </button>`).join('')}</div>`);
-            el.querySelectorAll('.dx-opt').forEach((b) => b.addEventListener('click', () => pick(b.dataset.v)));
-            go.textContent = qi === Q.length - 1 ? 'Ver mi diagnóstico' : 'Continuar';
-            refreshGo();
+        backBtn.hidden = !(idx > 0 && s.startsWith('q'));
+        if (s.startsWith('q')) {
+            const q = Q[idx];
+            setProg((idx + 0.5) / (Q.length + 1));
+            const el = mount(`<h2 class="ib-q">${esc(q.title)}</h2><p class="ib-hint">${esc(q.hint)}</p>
+                <div class="ib-opts" role="${q.multi ? 'group' : 'radiogroup'}" aria-label="${esc(q.title)}">${q.opts.map((o) => `
+                    <button type="button" class="ib-opt" role="${q.multi ? 'checkbox' : 'radio'}" aria-checked="${isOn(q, o.v)}" data-v="${o.v}" data-sfx="pop">
+                        <span class="ib-circ"><i class="bi bi-check-lg"></i></span>
+                        <span class="ib-lbl">${esc(o.t)}${o.d ? `<small>${esc(o.d)}</small>` : ''}</span>
+                        ${q.multi ? '' : '<i class="bi bi-arrow-right ib-arrow"></i>'}
+                    </button>`).join('')}</div>
+                ${q.multi ? '<button type="button" class="ib-cta" id="ibGo" data-sfx="swoosh" disabled>Continuar <i class="bi bi-arrow-right"></i></button>' : ''}`);
+            el.querySelectorAll('.ib-opt').forEach((b) => b.addEventListener('click', () => pick(b.dataset.v)));
+            if (q.multi) { $('#ibGo').onclick = () => { if (canGo()) next(); }; refreshGo(); }
         } else if (s === 'load') {
-            setBar(1);
-            mount(`<div class="dx-center"><div class="dx-ring" aria-hidden="true"></div>
-                <h2 class="wi-h2">Armando tu diagnóstico…</h2>
-                <p class="wi-lead">Revisando tus respuestas.</p></div>`);
-            setTimeout(() => { if (STEPS[idx] === 'load') { sfx('success'); next(); } }, 1500);
+            setProg(1);
+            const lines = ['Revisando lo que te molesta', 'Armando tu ruta de mezcla', 'Buscando lo que te conviene'];
+            mount(`<div class="ib-center"><div class="ib-ring" aria-hidden="true"></div><h2 class="ib-q">Armando tu diagnóstico…</h2>
+                <div class="ib-check">${lines.map((l) => `<div><i class="bi bi-check-circle-fill"></i>${l}</div>`).join('')}</div></div>`);
+            const rows = stage.querySelectorAll('.ib-check div');
+            rows.forEach((r, n) => setTimeout(() => r.classList.add('on'), 350 + n * 450));
+            setTimeout(() => { if (STEPS[idx] === 'load') { sfx('success'); next(); } }, 350 + rows.length * 450 + 250);
         } else if (s === 'gift') {
-            setBar(1);
+            setProg(1);
             const first = ORDER.find((k) => ans.pains.has(k)) || 'beat';
-            mount(`<div class="dx-center">
-                <span class="wi-badge wi-badge--success">Tu diagnóstico está listo</span>
-                <h2 class="wi-h2" style="margin-top:14px">${esc(CAUSE[first])}</h2>
-                <p class="wi-lead">Tengo ${route().length} pasos para arreglarlo. Déjame tu correo y te mando además un preset gratis para grabar tus maquetas con lo que ya trae tu DAW.</p>
-                <form class="dx-form" id="dxForm" novalidate>
-                    <input class="dx-hp" type="text" name="website" tabindex="-1" autocomplete="off" aria-hidden="true">
-                    <input class="dx-input" type="email" name="email" inputmode="email" autocomplete="email" placeholder="tu@correo.com" aria-label="Tu correo" required>
-                    <div class="dx-msg" id="dxMsg" role="status"></div>
-                    <button type="submit" class="dx-go" data-sfx="swoosh">Ver mi diagnóstico + regalo</button>
-                    <button type="button" class="dx-skip" id="dxSkip" data-sfx="tick">Ahora no, solo el diagnóstico</button>
-                </form></div>`);
-            $('#dxForm').addEventListener('submit', submitEmail);
-            $('#dxSkip').onclick = () => finish();
+            mount(`<div class="ib-center"><span class="ib-chip">Tu diagnóstico está listo</span>
+                <h2 class="ib-q" style="margin-top:12px">${esc(CAUSE[first])}</h2>
+                <p class="ib-hint">Tengo ${route().length} pasos para arreglarlo. Déjame tu correo y te mando también un preset gratis para grabar tus maquetas.</p></div>
+                <form id="ibForm" novalidate>
+                    <input class="ib-hp" type="text" name="website" tabindex="-1" autocomplete="off" aria-hidden="true">
+                    <input class="ib-input" type="email" name="email" inputmode="email" autocomplete="email" placeholder="Tu correo" aria-label="Tu correo" required>
+                    <div class="ib-msg" id="ibMsg" role="status"></div>
+                    <button type="submit" class="ib-cta" style="margin-top:4px" data-sfx="swoosh">Ver mi diagnóstico + regalo <i class="bi bi-arrow-right"></i></button>
+                    <button type="button" class="ib-link" id="ibSkip" data-sfx="tick">Ahora no, solo el diagnóstico</button>
+                </form>`);
+            $('#ibForm').addEventListener('submit', submitEmail);
+            $('#ibSkip').onclick = () => finish();
         }
     }
-
+    function refreshGo() { const b = $('#ibGo'); if (b) b.disabled = !canGo(); }
     function pick(v) {
-        const q = Q[idx - 1];
+        if (lock) return;
+        const q = Q[idx];
         if (q.multi) { ans[q.id].has(v) ? ans[q.id].delete(v) : ans[q.id].add(v); }
         else ans[q.id] = v;
-        stage.querySelectorAll('.dx-opt').forEach((b) => b.setAttribute('aria-checked', String(isOn(q, b.dataset.v))));
-        refreshGo();
+        stage.querySelectorAll('.ib-opt').forEach((b) => b.setAttribute('aria-checked', String(isOn(q, b.dataset.v))));
+        if (q.multi) refreshGo();
+        else { lock = true; setTimeout(next, 340); }   // las de una sola respuesta avanzan solas
     }
     function next() { if (idx < STEPS.length - 1) { idx++; render(); } }
-    function back() { if (idx > 1 && STEPS[idx].startsWith('q')) { idx--; render(); } else if (STEPS[idx] === 'q0') { idx = 0; render(); } }
-    go.addEventListener('click', () => { if (canGo()) next(); });
+    backBtn.addEventListener('click', () => { if (idx > 0) { idx--; render(); } });
 
     async function submitEmail(e) {
         e.preventDefault();
-        const f = e.currentTarget, msg = $('#dxMsg'), btn = f.querySelector('button[type="submit"]');
-        const email = String(new FormData(f).get('email') || '').trim();
-        if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email)) { msg.className = 'dx-msg'; msg.textContent = 'Revisa tu correo, parece que le falta algo.'; sfx('tick'); return; }
+        const f = e.currentTarget, msg = $('#ibMsg'), btn = f.querySelector('button[type="submit"]');
+        const fd = new FormData(f), email = String(fd.get('email') || '').trim();
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email)) { msg.className = 'ib-msg'; msg.textContent = 'Revisa tu correo, parece que le falta algo.'; sfx('tick'); return; }
         btn.disabled = true;
         const { ok, data } = await WI.api('/leads', { method: 'POST', auth: false, body: {
-            email, website: new FormData(f).get('website'), kind: 'lead_magnet', productId: GIFT_ID,
+            email, website: fd.get('website'), kind: 'lead_magnet', productId: GIFT_ID,
             source: 'diagnostico', variant: WI.ab.peek(), utm: WI.utm(), timezone: WI.tz, sessionId: WI.sid, page: location.pathname
         } });
         btn.disabled = false;
-        if (!ok) { msg.className = 'dx-msg'; msg.textContent = data?.error || 'No pude guardar tu correo. Intenta otra vez.'; return; }
+        if (!ok) { msg.className = 'ib-msg'; msg.textContent = data?.error || 'No pude guardar tu correo. Intenta otra vez.'; return; }
         gaveEmail = true;
         WI.track('lead', { productId: GIFT_ID, meta: { source: 'diagnostico' } });
-        msg.className = 'dx-msg is-ok'; msg.textContent = '¡Listo! Revisa tu correo 🎁';
+        msg.className = 'ib-msg ok'; msg.textContent = '¡Listo! Revisa tu correo 🎁';
         sfx('success');
         setTimeout(finish, 800);
     }
 
     // ── Resultado ───────────────────────────────────────────────────────────
-    function prodCard(p, why) {
-        const cover = p.media?.cover ? `<img src="${esc(p.media.cover)}" alt="" loading="lazy" decoding="async">` : '<i class="bi bi-box-seam"></i>';
-        return `<a class="dx-prod" href="${esc(WI.url(p))}" data-pid="${esc(p.id)}" data-sfx="click">
-            <span class="dx-ph">${cover}</span>
-            <span style="flex:1;min-width:0"><b>${esc(p.title)}</b><small>${esc(why || p.tagline || '')}</small></span>
-            <span>${WI.priceHtml(p.pricing)}</span></a>`;
-    }
-    function finish() {
-        document.body.classList.remove('dx-run');
-        window.scrollTo(0, 0);
+    const miniCard = (p) => `<a class="ib-pc" href="${esc(WI.url(p))}" data-pid="${esc(p.id)}" data-sfx="click">
+        <div class="th">${img(p) ? `<img src="${esc(img(p))}" alt="" loading="lazy" decoding="async">` : '<i class="bi bi-box-seam"></i>'}</div>
+        <div class="t"><b>${esc(p.title)}</b><small>${esc(price(p))}</small></div></a>`;
+
+    async function finish() {
+        if (!catalog) { try { catalog = await WI.catalog(); } catch (_) {} }
         const by = (id) => catalog?.byId?.get(id);
         const recId = recommended(), rec = by(recId);
         const others = ['plantilla-grabacion-y-mezcla-profesional-con-nativos', 'plantilla-grabacion-y-mezcla-profesional', 'plugin-easy-mix']
             .filter((id) => id !== recId).map(by).filter(Boolean).slice(0, 2);
-        const svc = by('servicio-plantilla-personalizada-para-tu-voz');
-        const gift = by(GIFT_ID);
+        const svc = by('servicio-plantilla-personalizada-para-tu-voz'), gift = by(GIFT_ID);
         const first = ORDER.find((k) => ans.pains.has(k)) || 'beat';
-        $('#resultBody').innerHTML = `
-            <span class="wi-badge wi-badge--accent">Tu diagnóstico</span>
-            <h1 class="wi-h1" style="margin-top:14px">No es tu micrófono.</h1>
-            <p class="wi-lead" style="margin-top:14px">${esc(CAUSE[first])} Mismo micro, mismo cuarto: cambia lo que haces después de grabar.</p>
-
-            <h2 class="wi-h2" style="margin-top:44px">Tu ruta, en orden</h2>
-            <ol class="dx-road" style="padding:0">${route().map((r, n) => `<li><span class="dx-n">${n + 1}</span><div><b>${esc(r.t)}</b><p>${esc(r.d)}</p></div></li>`).join('')}</ol>
-
-            ${gift ? `<div class="wi-note wi-note--success" style="margin-top:22px"><i class="bi bi-gift"></i><div><b>Tu regalo:</b> ${esc(gift.title)}. ${gaveEmail ? 'Ya te lo mandé al correo.' : `<a href="${esc(WI.url(gift))}" style="text-decoration:underline">Recógelo aquí</a>.`}</div></div>` : ''}
-
-            ${rec ? `<div class="wi-panel wi-panel--accent" style="margin-top:44px">
-                <span class="wi-badge wi-badge--accent">Lo que te recomiendo</span>
-                <h2 class="wi-h2" style="margin-top:14px">${esc(rec.title)}</h2>
-                <p class="wi-lead" style="margin-top:10px;color:#e4e4e7">${esc(WHY[recId] || rec.tagline || '')}</p>
-                <div style="margin-top:16px">${WI.priceHtml(rec.pricing, { lg: true, showSave: true })}</div>
-                <div class="wi-row" style="margin-top:20px"><a class="wi-btn wi-btn--accent wi-btn--lg" id="recGo" href="${esc(WI.url(rec))}" data-pid="${esc(rec.id)}">Ver ${esc(rec.title)}</a></div>
-            </div>` : ''}
-
-            ${others.length ? `<h3 class="wi-h2" style="margin-top:44px;font-size:1.5rem">Otras opciones</h3><div class="dx-two">${others.map((p) => prodCard(p)).join('')}</div>` : ''}
-
-            <div class="wi-panel" style="margin-top:44px">
-                <p class="wi-eyebrow">¿No sabes si te queda?</p>
-                <h2 class="wi-h2" style="margin-top:8px">Mándame tu voz + el beat y te lo pruebo.</h2>
-                <p class="wi-lead" style="margin-top:12px">Escuchas el resultado antes de decidir.${svc ? ' ' + WI.priceHtml(svc.pricing) + ' si te gusta.' : ''}</p>
-                <div class="wi-row" style="margin-top:20px">
-                    <a class="wi-btn wi-btn--dark wi-btn--lg" id="igGo" href="${IG}" target="_blank" rel="noopener"><i class="bi bi-instagram"></i>&nbsp;Mandarme tu voz por Instagram</a>
-                    ${svc ? `<a class="wi-btn wi-btn--ghost wi-btn--lg" href="${esc(WI.url(svc))}" data-pid="${esc(svc.id)}">Ver el servicio</a>` : ''}
-                </div>
+        const steps = route();
+        const tag = (n) => (n === 0 ? '<span class="ib-tag">Primero</span>' : n === steps.length - 1 ? '<span class="ib-tag g">Al final</span>' : '<span class="ib-tag g">Después</span>');
+        $('#ibTitle').innerHTML = 'Tu diagnóstico está listo: <em>no es tu micrófono</em>';
+        $('#res').innerHTML = `
+            <div class="ib-panel">
+                <span class="ib-eyebrow">Diagnóstico</span>
+                <h2>${esc(CAUSE[first])}</h2>
+                <p>Mismo micro. Mismo cuarto. Lo que cambia es lo que haces después de grabar. Esta es tu ruta, en orden:</p>
+                <ol class="ib-stages">${steps.map((r, n) => `<li><span class="ib-n">${n + 1}</span><div><b>${esc(r.t)}</b><small>${esc(r.d)}</small></div>${tag(n)}</li>`).join('')}</ol>
             </div>
-            <p class="wi-subtle" style="margin-top:22px"><button type="button" id="redo" style="text-decoration:underline">Repetir el diagnóstico</button></p>`;
+            ${gift ? `<div class="ib-gift"><i class="bi bi-gift"></i><div>${gaveEmail ? `Tu regalo ya va a tu correo: <b>${esc(gift.title)}</b>.` : `Tu regalo: <b>${esc(gift.title)}</b>. <a href="${esc(WI.url(gift))}" style="text-decoration:underline">Recógelo aquí</a>.`}</div></div>` : ''}
+            ${rec ? `<div class="ib-rec">
+                <div><span class="ib-eyebrow">Lo que te recomiendo</span><h2>${esc(rec.title)}</h2><p>${esc(WHY[recId] || rec.tagline || '')}</p>
+                <div class="ib-price">${esc(price(rec))}${was(rec) ? `<s>${esc(was(rec))}</s>` : ''}</div>
+                <a class="ib-cta" id="recGo" href="${esc(WI.url(rec))}" data-pid="${esc(rec.id)}" data-sfx="swoosh">Ver ${esc(rec.title)} <i class="bi bi-arrow-right"></i></a></div>
+                ${img(rec) ? `<img src="${esc(img(rec))}" alt="" decoding="async">` : ''}
+            </div>` : ''}
+            ${others.length ? `<div class="ib-sec-h" style="margin-top:8px"><small>Otras opciones</small></div><div class="ib-rail" style="margin:0 -18px">${others.map(miniCard).join('')}</div>` : ''}
+            <div class="ib-panel ib-handoff">
+                <span class="ib-eyebrow">¿No sabes si te queda?</span>
+                <h2>Mándame tu voz + el beat y te lo pruebo</h2>
+                <p>Escuchas el resultado antes de decidir${svc ? ` (si te gusta, ${esc(price(svc))})` : ''}.</p>
+                <a class="ib-cta ib-cta--ink" id="igGo" href="${IG}" target="_blank" rel="noopener"><i class="bi bi-instagram"></i> Mandarme mi voz por Instagram</a>
+                <a class="ib-cta ib-cta--wa" id="waGo" href="${esc(WI.wa('Hola Willie! Hice el diagnóstico de voz y quiero que me pruebes mi voz'))}" target="_blank" rel="noopener"><i class="bi bi-whatsapp"></i> Mandarla por WhatsApp</a>
+                <button type="button" class="ib-link" id="redo">Repetir el diagnóstico</button>
+            </div>`;
+        document.body.classList.add('is-result');
+        window.scrollTo(0, 0);
         if (rec) WI.track('upsell_view', { productId: rec.id, meta: { source: 'diagnostico' } });
         WI.track('onboarding_done', { meta: { source: 'diagnostico', pains: [...ans.pains], nivel: ans.nivel, plug: ans.plug, meta: ans.meta } });
-        $('#resultBody').addEventListener('click', (e) => {
+        $('#res').addEventListener('click', (e) => {
             const a = e.target.closest('[data-pid]');
             if (a) WI.track('upsell_click', { productId: a.dataset.pid, meta: { source: 'diagnostico' } });
-            if (e.target.closest('#igGo')) WI.track('offer_click', { meta: { source: 'diagnostico', to: 'instagram' } });
+            if (e.target.closest('#igGo, #waGo')) WI.track('offer_click', { meta: { source: 'diagnostico', to: e.target.closest('#igGo') ? 'instagram' : 'whatsapp' } });
         });
-        $('#redo').onclick = () => { ans.pains.clear(); ans.nivel = ans.plug = ans.meta = null; gaveEmail = false; idx = 0; document.body.classList.add('dx-run'); render(); };
+        $('#redo').onclick = () => {
+            ans.pains.clear(); ans.nivel = ans.plug = ans.meta = null; gaveEmail = false; idx = 0;
+            document.body.classList.remove('is-result'); $('#res').innerHTML = '';
+            $('#ibTitle').innerHTML = 'No culpes al micrófono: te digo <em>qué le falta a tu voz</em>… en menos de 1 minuto';
+            window.scrollTo(0, 0); render();
+        };
+    }
+
+    // ── Carrusel de productos (productos reales de la tienda) ───────────────
+    function renderShop() {
+        const ids = ['lead-graba-maquetas-con-nativos', 'plantilla-grabacion-y-mezcla-profesional-con-nativos', 'plantilla-grabacion-y-mezcla-profesional', 'plugin-easy-mix'];
+        const list = ids.map((id) => catalog?.byId?.get(id)).filter(Boolean);
+        if (!list.length) return;
+        $('#rail').innerHTML = list.map(miniCard).join('');
+        $('#shop').hidden = false;
+        $('#rail').addEventListener('click', (e) => { const a = e.target.closest('[data-pid]'); if (a) WI.track('upsell_click', { productId: a.dataset.pid, meta: { source: 'diagnostico', where: 'rail' } }); });
     }
 
     // ── Teclado: Enter continúa, 1–9 elige ──────────────────────────────────
     addEventListener('keydown', (e) => {
-        if (!document.body.classList.contains('dx-run') || e.metaKey || e.ctrlKey || e.altKey) return;
+        if (document.body.classList.contains('is-result') || e.metaKey || e.ctrlKey || e.altKey) return;
         const tag = (e.target.tagName || '').toLowerCase();
         const s = STEPS[idx];
-        if (tag === 'input') return;
-        if (e.key === 'Enter' && s.startsWith('q') && canGo() && tag !== 'button') { e.preventDefault(); sfx('swoosh'); next(); }
-        else if (e.key === 'Enter' && s === 'intro' && tag !== 'button') { next(); }
-        else if (/^[1-9]$/.test(e.key) && s.startsWith('q')) {
-            const o = Q[idx - 1].opts[Number(e.key) - 1];
-            if (o) { pick(o.v); sfx('pop'); }
-        } else if (e.key === 'Backspace' && s.startsWith('q')) back();
+        if (tag === 'input' || !s.startsWith('q')) return;
+        const q = Q[idx];
+        if (e.key === 'Enter' && q.multi && canGo() && tag !== 'button') { e.preventDefault(); sfx('swoosh'); next(); }
+        else if (/^[1-9]$/.test(e.key)) { const o = q.opts[Number(e.key) - 1]; if (o) { pick(o.v); sfx('pop'); } }
     });
 
     // ── Arranque ────────────────────────────────────────────────────────────
     render();
     (async () => {
-        try { catalog = await WI.init({ active: '', footer: true }); } catch (_) { catalog = null; }
+        try { catalog = await WI.init({ active: '', footer: false }); } catch (_) { catalog = null; }
         WI.track('popup_view', { meta: { source: 'diagnostico' } });
+        renderShop();
     })();
 })();
 </script>
