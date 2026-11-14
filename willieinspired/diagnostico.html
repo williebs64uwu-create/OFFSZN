@@ -184,7 +184,9 @@
         .ib-pc .th img { width: 100%; height: 100%; object-fit: cover; }
         .ib-pc div.t { padding: 11px 13px 13px; }
         .ib-pc b { display: block; font-size: .86rem; line-height: 1.25; }
-        .ib-pc small { display: block; margin-top: 3px; font-size: .78rem; font-weight: 700; color: var(--accent-ink); }
+        .ib-pc small { display: block; margin-top: 3px; font-size: .95rem; font-weight: 800; color: var(--accent-ink); }
+        .ib-pc small s { font-size: .78rem; font-weight: 600; color: var(--muted); margin-left: 4px; }
+        .ib-pc .bt { display: flex; align-items: center; justify-content: center; gap: 6px; margin-top: 11px; min-height: 42px; border-radius: 999px; background: var(--accent); color: #fff; font-size: .8rem; font-weight: 800; letter-spacing: .05em; box-shadow: 0 12px 24px -12px rgba(236,72,153,.8); }
 
         .ib-foot { max-width: 720px; margin: 50px auto 0; text-align: center; }
         .ib-mark { font-family: var(--display); font-weight: 800; font-size: clamp(2.2rem, 11vw, 4.2rem); letter-spacing: -.04em; line-height: 1; color: rgba(12,20,36,.07); user-select: none; }
@@ -197,6 +199,14 @@
         .ib-testi { margin: 26px -18px 0; }
         .ib-trail { display: flex; gap: 14px; overflow-x: auto; scroll-snap-type: x mandatory; padding: 18px 18px 22px; -webkit-overflow-scrolling: touch; scrollbar-width: none; scroll-padding: 0 18px; }
         .ib-trail::-webkit-scrollbar { display: none; }
+        .ib-marq { display: grid; gap: 14px; padding: 18px 0 8px; overflow: hidden; -webkit-mask-image: linear-gradient(90deg, transparent, #000 6%, #000 94%, transparent); mask-image: linear-gradient(90deg, transparent, #000 6%, #000 94%, transparent); }
+        .ib-mrow { display: flex; gap: 14px; width: max-content; }
+        .ib-mgrp { display: flex; gap: 14px; flex: none; animation: ibMarq 90s linear infinite; will-change: transform; }
+        .ib-mrow.rev .ib-mgrp { animation-direction: reverse; animation-duration: 100s; }
+        .ib-marq:hover .ib-mgrp { animation-play-state: paused; }
+        @keyframes ibMarq { to { transform: translateX(calc(-100% - 14px)); } }
+        @media (prefers-reduced-motion: reduce) { .ib-mgrp { animation: none; } .ib-marq { overflow-x: auto; } }
+        .ib-mgrp .ib-tc { width: 270px; height: 270px; }
         .ib-tc { flex: none; width: min(300px, 78vw); height: 340px; scroll-snap-align: start; position: relative; border-radius: 20px; background: #0d1017; border: 1px solid rgba(12,20,36,.12); box-shadow: var(--shadow-md); overflow: hidden; display: grid; place-items: center; padding: 10px; cursor: zoom-in; transition: transform .2s var(--ease); }
         .ib-tc:hover { transform: translateY(-3px); }
         .ib-tc img { max-width: 100%; max-height: 100%; width: auto; height: auto; object-fit: contain; border-radius: 12px; display: block; }
@@ -224,11 +234,6 @@
     <div class="ib-wrap">
         <h1 class="ib-h1" id="ibTitle">No culpes al micrófono: te digo <em>qué le falta a tu voz</em>… en menos de 1 minuto</h1>
 
-        <section class="ib-testi" id="testi" aria-label="Testimonios">
-            <div class="ib-sec-h"><small>Capturas reales · Easy Mix</small><h2>Lo que dicen los artistas y productores</h2></div>
-            <div class="ib-trail" id="trail" tabindex="0"></div>
-        </section>
-
         <section class="ib-card" id="card" aria-live="polite" aria-label="Diagnóstico de tu voz">
             <div class="ib-prog" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" id="ibProgWrap"><i id="ibProg"></i></div>
             <div class="ib-body"><button type="button" class="ib-back" id="ibBack" hidden><i class="bi bi-chevron-left"></i> Volver</button><div id="ibStage"></div></div>
@@ -244,6 +249,11 @@
                 <li>100% gratis, sin tarjeta y sin compromiso</li>
             </ul>
         </div>
+
+        <section class="ib-testi" id="testi" aria-label="Testimonios">
+            <div class="ib-sec-h"><small>Capturas reales · Easy Mix</small><h2>Lo que dicen los artistas y productores</h2></div>
+            <div class="ib-marq" id="marq"></div>
+        </section>
 
         <section class="ib-sec" id="shop" hidden>
             <div class="ib-sec-h"><small>En la tienda</small><h2>Lo que tengo para ti en la tienda</h2></div>
@@ -274,8 +284,10 @@
         'plugin-easy-mix': 'easy-mix.png'
     };
     const img = (p) => (IMG[p.id] ? `/willieinspired/assets/diagnostico/${IMG[p.id]}` : p.media?.cover || '');
-    const price = (p) => { const pr = p.pricing; if (!pr || !pr.usd) return 'Gratis'; const l = pr.local || { amount: pr.usd, currency: 'USD' }; return WI.fmt(l.amount, l.currency); };
-    const was = (p) => { const c = p.pricing?.compareAtLocal; return c ? WI.fmt(c.amount, c.currency) : ''; };
+    // Siempre en dólares (USD), como pidió Willie
+    const price = (p) => { const u = p.pricing?.usd; return u ? WI.fmt(u, 'USD') : 'Gratis'; };
+    const was = (p) => { const c = p.pricing?.compareAtUsd; return c ? WI.fmt(c, 'USD') : ''; };
+    const BTN = ['LO QUIERO', 'ME LO LLEVO', 'OBTENERLO'];
     $('#yr').textContent = new Date().getFullYear();
 
     // ── Preguntas (las de tus DMs: «¿qué necesitas en tus voces actualmente?», «¿nativos o externos como FabFilter, Waves?») ──
@@ -410,7 +422,7 @@
                     <input class="ib-hp" type="text" name="website" tabindex="-1" autocomplete="off" aria-hidden="true">
                     <input class="ib-input" type="email" name="email" inputmode="email" autocomplete="email" placeholder="Tu correo" aria-label="Tu correo" required>
                     <div class="ib-msg" id="ibMsg" role="status"></div>
-                    <button type="submit" class="ib-cta" style="margin-top:4px" data-sfx="swoosh">Ver mi diagnóstico + regalo <i class="bi bi-arrow-right"></i></button>
+                    <button type="submit" class="ib-cta" style="margin-top:4px" data-sfx="swoosh">LO QUIERO: MI DIAGNÓSTICO + REGALO <i class="bi bi-arrow-right"></i></button>
                     <button type="button" class="ib-link" id="ibSkip" data-sfx="tick">Ahora no, solo el diagnóstico</button>
                 </form>`);
             $('#ibForm').addEventListener('submit', submitEmail);
@@ -450,9 +462,9 @@
     }
 
     // ── Resultado ───────────────────────────────────────────────────────────
-    const miniCard = (p) => `<a class="ib-pc" href="${esc(WI.url(p))}" data-pid="${esc(p.id)}" data-sfx="click">
+    const miniCard = (p, n = 0) => `<a class="ib-pc" href="${esc(WI.url(p))}" data-pid="${esc(p.id)}" data-sfx="click">
         <div class="th${p.id === 'plugin-easy-mix' ? ' dark' : ''}">${img(p) ?`<img src="${esc(img(p))}" alt="" loading="lazy" decoding="async">` : '<i class="bi bi-box-seam"></i>'}</div>
-        <div class="t"><b>${esc(p.title)}</b><small>${esc(price(p))}</small></div></a>`;
+        <div class="t"><b>${esc(p.title)}</b><small>${esc(price(p))}${was(p) ? ` <s>${esc(was(p))}</s>` : ''}</small><span class="bt">${BTN[n % BTN.length]} <i class="bi bi-arrow-right"></i></span></div></a>`;
 
     async function finish() {
         if (!catalog) { try { catalog = await WI.catalog(); } catch (_) {} }
@@ -476,14 +488,14 @@
             ${rec ? `<div class="ib-rec">
                 <div><span class="ib-eyebrow">Con esa descripción, esto es lo que mejor se acomoda</span><h2>${esc(rec.title)}</h2><p>${esc(WHY[recId] || rec.tagline || '')}</p>
                 <div class="ib-price">${esc(price(rec))}${was(rec) ? `<s>${esc(was(rec))}</s>` : ''}</div>
-                <a class="ib-cta" id="recGo" href="${esc(WI.url(rec))}" data-pid="${esc(rec.id)}" data-sfx="swoosh">Ver ${esc(rec.title)} <i class="bi bi-arrow-right"></i></a></div>
+                <a class="ib-cta" id="recGo" href="${esc(WI.url(rec))}" data-pid="${esc(rec.id)}" data-sfx="swoosh">ME LO LLEVO · ${esc(price(rec))} <i class="bi bi-arrow-right"></i></a></div>
                 ${img(rec) ? `<img src="${esc(img(rec))}" alt="" decoding="async">` : ''}
             </div>` : ''}
-            ${others.length ? `<div class="ib-sec-h" style="margin-top:8px"><small>Otras opciones</small></div><div class="ib-rail" style="margin:0 -18px">${others.map(miniCard).join('')}</div>` : ''}
+            ${others.length ? `<div class="ib-sec-h" style="margin-top:8px"><small>Otras opciones</small></div><div class="ib-rail" style="margin:0 -18px">${others.map((p, n) => miniCard(p, n + 1)).join('')}</div>` : ''}
             <div class="ib-panel ib-handoff">
                 <span class="ib-eyebrow">¿No sabes si te queda?</span>
                 <h2>Mándame tu voz + el beat y te lo pruebo</h2>
-                <p>Te mando un video así escuchas el resultado, y me dices qué te parece${svc ? `. Si te gusta, son ${esc(price(svc))}` : ''}.</p>
+                <p>Te mando un video así escuchas el resultado, y me dices qué te parece${svc ? `. Si te gusta, son ${esc(price(svc))} (USD)` : ''}.</p>
                 <a class="ib-cta ib-cta--ink" id="igGo" href="${IG}" target="_blank" rel="noopener"><i class="bi bi-instagram"></i> Mandarme mi voz por Instagram</a>
                 <a class="ib-cta ib-cta--wa" id="waGo" href="${esc(WI.wa('Hola Willie! Hice el diagnóstico de voz y quiero que me pruebes mi voz'))}" target="_blank" rel="noopener"><i class="bi bi-whatsapp"></i> Mandarla por WhatsApp</a>
                 <button type="button" class="ib-link" id="redo">Repetir el diagnóstico</button>
@@ -501,7 +513,7 @@
         $('#redo').onclick = () => {
             ans.pains.clear(); ans.nivel = ans.plug = ans.estilo = ans.meta = null; gaveEmail = false; idx = 0;
             document.body.classList.remove('is-result'); $('#res').innerHTML = '';
-            $('#ibTitle').after($('#testi'));
+            $('.ib-bul-wrap').after($('#testi'));
             $('#ibTitle').innerHTML = 'No culpes al micrófono: te digo <em>qué le falta a tu voz</em>… en menos de 1 minuto';
             window.scrollTo(0, 0); render();
         };
@@ -512,18 +524,22 @@
         const ids = ['plantilla-grabacion-y-mezcla-profesional-con-nativos', 'plantilla-grabacion-y-mezcla-profesional', 'plugin-easy-mix'];   // solo los de pago
         const list = ids.map((id) => catalog?.byId?.get(id)).filter(Boolean);
         if (!list.length) return;
-        $('#rail').innerHTML = list.map(miniCard).join('');
+        $('#rail').innerHTML = list.map((p, n) => miniCard(p, n)).join('');
         $('#shop').hidden = false;
         $('#rail').addEventListener('click', (e) => { const a = e.target.closest('[data-pid]'); if (a) WI.track('upsell_click', { productId: a.dataset.pid, meta: { source: 'diagnostico', where: 'rail' } }); });
     }
 
     // ── Testimonios: capturas reales de la página de Easy Mix, grandes y con zoom ──
     const TESTI = ['testi-1.jpg', 'testi-4.jpg', 'testi-3.jpg', 'chrome_sRDhkGjPW8.png', 'chrome_X0VHS3Sw0h.png', 'testi-5.jpg', 'chrome_wvvsGlZV7e.png', 'plugin-testi.png', 'chrome_UysuaXrBoQ.png', 'testi-new-1.jpg', 'chrome_18pXdN4UU8.png'];
-    $('#trail').innerHTML = TESTI.map((f) => `<button type="button" class="ib-tc" data-src="/images/plugins/${f}" aria-label="Ver testimonio en grande"><img src="/images/plugins/${f}" alt="Testimonio de un cliente de Easy Mix" loading="lazy" decoding="async"></button>`).join('');
+    const tcard = (f) => `<button type="button" class="ib-tc" data-src="/images/plugins/${f}" aria-label="Ver testimonio en grande"><img src="/images/plugins/${f}" alt="Testimonio de un cliente de Easy Mix" decoding="async"></button>`;
+    // 2 filas que se mueven solas (la de abajo va al revés); cada fila se repite para que el ciclo no tenga saltos
+    const mrow = (list, rev) => { const g = list.map(tcard).join(''); return `<div class="ib-mrow${rev ? ' rev' : ''}"><div class="ib-mgrp">${g}</div><div class="ib-mgrp" aria-hidden="true">${g}</div></div>`; };
+    const half = Math.ceil(TESTI.length / 2);
+    $('#marq').innerHTML = mrow(TESTI.slice(0, half), false) + mrow(TESTI.slice(half), true);
     const lb = document.createElement('div');
     lb.className = 'ib-lb'; lb.innerHTML = '<img alt="Testimonio">';
     document.body.appendChild(lb);
-    $('#trail').addEventListener('click', (e) => { const b = e.target.closest('.ib-tc'); if (b) { lb.firstChild.src = b.dataset.src; lb.classList.add('on'); sfx('pop'); } });
+    $('#marq').addEventListener('click', (e) => { const b = e.target.closest('.ib-tc'); if (b) { lb.firstChild.src = b.dataset.src; lb.classList.add('on'); sfx('pop'); } });
     lb.addEventListener('click', () => lb.classList.remove('on'));
     addEventListener('keydown', (e) => { if (e.key === 'Escape') lb.classList.remove('on'); });
 
