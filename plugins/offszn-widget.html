@@ -8,7 +8,7 @@
     <link rel="icon" type="image/png" sizes="32x32" href="/willieimages/favicon-32x32.png">
     <link rel="icon" type="image/png" sizes="16x16" href="/willieimages/favicon-16x16.png">
     <link rel="icon" type="image/x-icon" href="/willieimages/favicon.ico">
-    <meta name="description" content="Widget flotante para productores: manda tus beats en MP3 con tu tag de voz, mide LUFS y pico real, saca el tempo, convierte, graba y organiza tus tareas. Pomodoro, Tareas y Tempo gratis.">
+    <meta name="description" content="Widget flotante para productores: baja videos de YouTube, Instagram y TikTok, manda tus beats en MP3 con tu tag de voz, mide LUFS y pico real, saca el tempo, convierte, graba y organiza tus tareas. Pomodoro, Tareas y Tempo gratis.">
     <meta name="theme-color" content="#121214">
     <meta property="og:title" content="OFFSZN Widget | La barra del productor para Windows">
     <meta property="og:description" content="Manda beats con tu tag de voz, mide LUFS, saca el tempo y organiza tu sesión sin salir de tu DAW.">
@@ -24,13 +24,14 @@
       ║  1. productId:   id del producto "OFFSZN Widget" en la tienda (el mismo que  ║
       ║                  va en WIDGET_PRODUCT_IDS de Vercel). Con 0 no se muestra    ║
       ║                  ningún botón de pago (la página se puede publicar igual).   ║
-      ║  2. price:       precio en USD (debe coincidir con la tienda y el backend).  ║
+      ║  2. price:       precio en USD (debe coincidir con la tienda y el backend);   ║
+      ║     listPrice:   precio anterior que se muestra tachado (0 = no se tacha).    ║
       ║  3. yapePricePEN: precio fijo en soles para Yape (0 = lo calcula el backend).║
       ║  4. downloadUrl: enlace del instalador de Windows. Vacío = sin botón.        ║
       ╚══════════════════════════════════════════════════════════════════════════════╝
     -->
     <script>
-        window.WIDGET_PAGE = { productId: 0, price: 5, yapePricePEN: 0, downloadUrl: '' };
+        window.WIDGET_PAGE = { productId: 0, price: 9, listPrice: 20, yapePricePEN: 0, downloadUrl: '' };
     </script>
 
     <!-- iconos que usa el modal de compra (script/plugin-checkout.js) -->
@@ -131,6 +132,7 @@
         .plan h3 { font-size: 18px; }
         .amount { font-size: 42px; font-weight: 800; letter-spacing: -1px; margin: 6px 0 2px; }
         .amount small { font-size: 14px; font-weight: 500; color: var(--dim); letter-spacing: 0; }
+        .amount .was { font-size: 22px; font-weight: 600; color: var(--dim); margin-right: 4px; text-decoration-thickness: 2px; }
         .plan ul { margin: 16px 0 20px; display: flex; flex-direction: column; gap: 8px; }
         .plan li { display: flex; gap: 9px; font-size: 14.5px; color: #c9c9d2; }
         .plan li::before { content: "✓"; color: var(--ok); font-weight: 700; }
@@ -177,8 +179,8 @@
             <div class="hero">
                 <div>
                     <span class="tag">Para Windows · Pomodoro, Tareas y Tempo gratis</span>
-                    <h1>Manda tu beat con tag <em>en 10 segundos</em>, sin salir de tu DAW.</h1>
-                    <p class="lead">OFFSZN Widget es una barra flotante que vive en el borde de tu pantalla: prepara el MP3 para tu cliente, mide el volumen, saca el tempo y ordena tu sesión.</p>
+                    <h1>Baja el video, manda tu beat con tag y mide tu mezcla, <em>sin salir de tu DAW</em>.</h1>
+                    <p class="lead">OFFSZN Widget es una barra flotante que vive en el borde de tu pantalla: baja videos de YouTube, Instagram y TikTok, prepara el MP3 para tu cliente, mide el volumen y ordena tu sesión.</p>
                     <div class="cta">
                         <a class="btn primary" id="dlBtn" hidden>
                             <svg viewBox="0 0 24 24"><path d="M12 4v12M7 11l5 5 5-5M4 20h16" /></svg>
@@ -200,7 +202,7 @@
                             <span class="on"><svg viewBox="0 0 24 24"><path d="M21 3L3 10l7 3 3 7zM10 13l5-5" /></svg>Enviar</span>
                             <span><svg viewBox="0 0 24 24"><path d="M4 20V10M10 20V4M16 20v-7M21 20v-4" /></svg></span>
                             <span><svg viewBox="0 0 24 24"><path d="M12 4a8 8 0 1 0 0 16a8 8 0 0 0 0-16M12 9a3 3 0 1 0 0 6a3 3 0 0 0 0-6" /></svg></span>
-                            <span><svg viewBox="0 0 24 24"><path d="M8 5h8v3H8zM6 6H5v15h14V6h-1" /></svg></span>
+                            <span><svg viewBox="0 0 24 24"><path d="M12 3v12M7 10l5 5 5-5M5 21h14" /></svg></span>
                         </div>
                     </div>
                     <div class="mpicks">
@@ -214,14 +216,14 @@
             </div>
 
             <section id="funciones">
-                <h2>Ocho herramientas en una barra</h2>
+                <h2>Todo lo que usas al producir, en una barra</h2>
                 <p class="sub">Se abre al pasar el mouse, se pega a cualquier borde y no estorba mientras produces.</p>
                 <div class="grid">
                     <div class="card"><svg viewBox="0 0 24 24"><path d="M21 3L3 10l7 3 3 7zM10 13l5-5" /></svg><h3>Enviar</h3><p>MP3 320 con nombre ordenado, datos y tu tag de voz repetido. Listo para arrastrar al chat.</p></div>
                     <div class="card"><svg viewBox="0 0 24 24"><path d="M4 20V10M10 20V4M16 20v-7M21 20v-4" /></svg><h3>Analizar</h3><p>Volumen integrado (LUFS), pico real y rango dinámico, con avisos si va a saturar.</p></div>
                     <div class="card"><svg viewBox="0 0 24 24"><path d="M4 8h13l-3-3M20 16H7l3 3" /></svg><h3>Convertir</h3><p>Suelta audio o video y sale en MP3 320, WAV 24-bit o FLAC. Nunca pisa el original.</p></div>
                     <div class="card"><svg viewBox="0 0 24 24"><path d="M12 4a8 8 0 1 0 0 16a8 8 0 0 0 0-16M12 9a3 3 0 1 0 0 6a3 3 0 0 0 0-6" /></svg><h3>Grabar</h3><p>Graba lo que suena en tu PC en WAV 24-bit y arrástralo a tu DAW.</p></div>
-                    <div class="card"><svg viewBox="0 0 24 24"><path d="M8 5h8v3H8zM6 6H5v15h14V6h-1" /></svg><h3>Portapapeles</h3><p>Historial de lo que copias y textos fijados: precios, enlaces y respuestas a clientes.</p></div>
+                    <div class="card"><svg viewBox="0 0 24 24"><path d="M12 3v12M7 10l5 5 5-5M5 21h14" /></svg><h3>Descargar</h3><p>Pega el link de YouTube, Instagram o TikTok y baja el video en MP4, o el audio en MP3 o WAV para samplear. Se ordena solo por red.</p></div>
                     <div class="card"><svg viewBox="0 0 24 24"><path d="M8 3h8l3 18H5zM12 15l5-9" /></svg><h3>Tempo <span class="free">Gratis</span></h3><p>Toca TAP y obtén el BPM con los tiempos en milisegundos para delay y reverb.</p></div>
                     <div class="card"><svg viewBox="0 0 24 24"><path d="M4 4h4v16H4zM10 4h4v10h-4zM16 4h4v13h-4z" /></svg><h3>Tareas <span class="free">Gratis</span></h3><p>Tablero Por hacer, En proceso y Realizado. Arrastra cada tarjeta a su columna.</p></div>
                     <div class="card"><svg viewBox="0 0 24 24"><path d="M12 3a9 9 0 1 0 0 18a9 9 0 0 0 0-18M12 7v5l3 2" /></svg><h3>Pomodoro <span class="free">Gratis</span></h3><p>Sesiones de foco con descansos y aviso al terminar. El tiempo se ve aunque esté cerrado.</p></div>
@@ -257,11 +259,12 @@
                     </div>
                     <div class="plan pro">
                         <h3>Licencia completa</h3>
-                        <div class="amount">$<span id="priceUsd">5</span> <small>USD · pago único</small></div>
+                        <div class="amount"><s class="was" id="priceWas">$20</s> $<span id="priceUsd">9</span> <small>USD · pago único</small></div>
                         <ul>
                             <li>Enviar: MP3 con tu tag de voz</li>
                             <li>Analizar: LUFS y pico real</li>
-                            <li>Convertir, Grabar y Portapapeles</li>
+                            <li>Descargar de YouTube, Instagram y TikTok</li>
+                            <li>Convertir y Grabar</li>
                             <li>Tu clave llega a tu correo al instante</li>
                         </ul>
                         <div class="pay" id="payBox" hidden>
@@ -279,8 +282,9 @@
                 <h2>Preguntas</h2>
                 <details><summary>¿Funciona en Mac?</summary><p>Por ahora solo en Windows 10 y 11.</p></details>
                 <details><summary>¿Necesito un DAW en particular?</summary><p>No. Es una app aparte que flota sobre tu pantalla, así que acompaña a cualquier DAW. Lo que grabas o conviertes se arrastra directo a tu DAW.</p></details>
-                <details><summary>¿Qué pasa cuando termina la prueba de 3 días?</summary><p>Pomodoro, Tareas y Tempo siguen funcionando gratis para siempre. Enviar, Analizar, Convertir, Grabar y Portapapeles piden la licencia.</p></details>
+                <details><summary>¿Qué pasa cuando termina la prueba de 3 días?</summary><p>Pomodoro, Tareas y Tempo siguen funcionando gratis para siempre. Descargar, Enviar, Analizar, Convertir y Grabar piden la licencia.</p></details>
                 <details><summary>¿En cuántos equipos puedo usar mi licencia?</summary><p>En 2 equipos. La clave es de por vida, sin pagos mensuales.</p></details>
+                <details><summary>¿Qué videos puedo descargar?</summary><p>Videos públicos de YouTube, Instagram y TikTok. Los privados no se pueden, y algunos de Instagram piden tener la sesión abierta en tu navegador (el widget lo explica si pasa). Descarga solo lo que tengas permiso de usar.</p></details>
                 <details><summary>¿El tag daña mi beat original?</summary><p>No. Tu archivo original no se toca: el widget crea un MP3 nuevo al lado, y si ya existe uno con ese nombre le añade un número.</p></details>
                 <details><summary>Windows me avisa al instalar, ¿es normal?</summary><p>Sí. La primera vez Windows puede mostrar un aviso azul porque el instalador es nuevo. Pulsa «Más información» y luego «Ejecutar de todas formas».</p></details>
             </section>
@@ -297,6 +301,7 @@
         (function () {
             var c = window.WIDGET_PAGE || {};
             document.getElementById('priceUsd').textContent = c.price;
+            if (c.listPrice > c.price) document.getElementById('priceWas').textContent = '$' + c.listPrice; else document.getElementById('priceWas').remove();
             if (c.downloadUrl) {
                 ['dlBtn', 'dlBtn2'].forEach(function (id) { var a = document.getElementById(id); a.href = c.downloadUrl; a.hidden = false; });
                 document.getElementById('dlSoon').hidden = true;
