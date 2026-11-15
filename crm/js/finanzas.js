@@ -16,7 +16,8 @@
     const rate1 = (n) => String(n).replace('.', ',');
     const PAGE = 10;
 
-    const KIND_CLASS = { Servicio: 'fx-tag--svc', Plugin: 'fx-tag--plg', Payhip: 'fx-tag--pay', 'Por revisar': 'fx-tag--warn', Otro: '' };
+    const KIND_CLASS = { Servicio: 'fx-tag--svc', Plugin: 'fx-tag--plg', Payhip: 'fx-tag--pay', Preset: 'fx-tag--pay', 'Por revisar': 'fx-tag--warn', Otro: '' };
+    const METHOD_CUR = { yape: 'PEN', binance: 'PEN', paypal: 'USD', mp_argentina: 'ARS' }; // cada método cobra en una sola moneda
     const METHOD_CLASS = { paypal: 'fx-tag--pp', yape: 'fx-tag--yp', binance: 'fx-tag--bn', mp_argentina: 'fx-tag--ar', mercadopago: 'fx-tag--ar' };
     const METHOD_COLOR = { paypal: 'hsl(221 83% 53%)', yape: 'hsl(270 70% 55%)', binance: 'hsl(45 95% 50%)', mp_argentina: 'hsl(190 80% 40%)', mercadopago: 'hsl(190 80% 40%)' };
     const card = (title, desc, body, extra = '') => `<section class="card ${extra}"><div class="card__head"><div><h2 class="card__title">${title}</h2>${desc ? `<p class="card__desc">${desc}</p>` : ''}</div></div><div class="card__body">${body}</div></section>`;
@@ -24,6 +25,7 @@
     const state = { method: 'all', kind: 'all', page: 1 };
 
     const status = (r) => {
+        if (METHOD_CUR[r.method] && r.currency && METHOD_CUR[r.method] !== r.currency) return '<span class="badge badge--warning" title="El método y la moneda no van juntos. Corrígelo para que no se cuente mal.">⚠ Revisar moneda</span>';
         if (r.status === 'no_detail') return '<span class="badge badge--warning">Sin dato · revisar</span>';
         if (r.status === 'pending_review') return r.currency === 'ARS' ? '<span class="badge badge--warning">Pesos por confirmar</span>' : '<span class="badge badge--warning">Por revisar</span>';
         if (r.kind === 'Por revisar') return '<span class="badge badge--warning">Por revisar</span>';

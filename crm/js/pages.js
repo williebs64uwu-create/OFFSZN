@@ -304,7 +304,7 @@
             $('#regUsdtBox').hidden = !bin;
             if (bin) { $('#regCur').value = 'PEN'; const u = Number($('#regUsdt').value) || 0; const r = Number($('#regUsdtRate').value) || USDT_RATE; if (u) f.amount.value = (Math.round(u * r * 100) / 100).toFixed(2); $('#regHint').textContent = 'Soles aproximados: USDT × cambio. Cámbialo si te llegó otro monto.'; }
         };
-        $('#regMethod').addEventListener('change', () => { syncUsdt(); syncFee(); }); $('#regCur').addEventListener('change', syncFee); syncFee(); $('#regUsdt').addEventListener('input', syncUsdt); $('#regUsdtRate').addEventListener('input', syncUsdt);
+        $('#regMethod').addEventListener('change', () => { const c = { yape: 'PEN', binance: 'PEN', paypal: 'USD', mp_argentina: 'ARS' }[$('#regMethod').value]; if (c) $('#regCur').value = c; syncUsdt(); syncFee(); }); $('#regCur').addEventListener('change', syncFee); syncFee(); $('#regUsdt').addEventListener('input', syncUsdt); $('#regUsdtRate').addEventListener('input', syncUsdt);
         $('#regWhen').onchange = (e) => { $('#regCustomBox').hidden = e.target.value !== 'custom'; };
         f.onsubmit = async (e) => {
             e.preventDefault();
