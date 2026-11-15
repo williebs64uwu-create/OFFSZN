@@ -1,0 +1,2970 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>SYNORA® | De la idea al MIDI: imagen, audio y melodías</title>
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" sizes="32x32" href="/willieimages/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/willieimages/favicon-16x16.png">
+    <link rel="icon" type="image/x-icon" href="/favicon.ico">
+
+    <!-- SEO Meta Tags -->
+    <meta name="description" content="SYNORA es un plugin VST3 que convierte capturas de piano roll y loops de audio en MIDI, y crea melodías, acordes y bajos por género, tonalidad y emoción. Arrastra el MIDI a tu piano roll.">
+    <meta name="keywords" content="synora, synora plugin, offszn synora, audio a midi, imagen a midi, generador de melodías, acordes, bajo, vst3, fl studio, piano roll">
+    <meta name="theme-color" content="#050505">
+
+    <!-- Open Graph / Social -->
+    <meta property="og:title" content="SYNORA® | De la idea al MIDI">
+    <meta property="og:description" content="Convierte imágenes y loops en MIDI y crea melodías, acordes y bajos. Un VST3 para tu piano roll.">
+    <meta property="og:image" content="https://offszn.lat/images/plugins/synora/og.jpg">
+    <meta property="og:type" content="product">
+    <meta property="og:site_name" content="OFFSZN">
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+
+
+    <script>
+        // Sin clic derecho ni zoom (rueda, atajos, pellizco). Es una barrera de uso: no impide que alguien con conocimientos vea el código.
+        (function () {
+            const stop = e => { e.preventDefault(); return false; };
+            document.addEventListener('contextmenu', stop);
+            window.addEventListener('wheel', e => { if (e.ctrlKey || e.metaKey) e.preventDefault(); }, { passive: false });
+            window.addEventListener('keydown', e => {
+                const k = (e.key || '').toLowerCase(), mod = e.ctrlKey || e.metaKey;
+                if (mod && ['+', '-', '=', '_', '0'].includes(k)) return stop(e);          // zoom con teclado
+                if (k === 'f12' || (mod && e.shiftKey && ['i', 'j', 'c'].includes(k)) || (mod && k === 'u')) return stop(e);   // herramientas de desarrollo y ver código
+            }, true);
+            ['gesturestart', 'gesturechange', 'gestureend'].forEach(t => document.addEventListener(t, stop));   // pellizco en Safari
+            document.addEventListener('touchmove', e => { if (e.touches && e.touches.length > 1) e.preventDefault(); }, { passive: false });   // pellizco en móviles
+            let last = 0; document.addEventListener('touchend', e => { const n = Date.now(); if (n - last < 300) e.preventDefault(); last = n; }, { passive: false });   // doble toque
+        })();
+    </script>
+    <style>html { touch-action: pan-x pan-y; -webkit-text-size-adjust: 100%; }</style>
+    <script src="/env.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script>window.supabaseClient = null;</script>
+    <script src="/script/config.js"></script>
+    <script src="/script/auth-utils.js?v=12"></script>
+    <style>
+        /* ==================== RESET & CORE THEME ==================== */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        html {
+            scroll-behavior: smooth;
+            background: #000000;
+        }
+
+        body {
+            margin: 0;
+            background: #000000;
+            color: #131313;
+            font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, Arial, sans-serif;
+            overflow-x: hidden;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        button, a, input {
+            -webkit-tap-highlight-color: transparent;
+            font-family: inherit;
+        }
+
+        button {
+            cursor: pointer;
+            border: none;
+            outline: none;
+        }
+
+        a {
+            text-decoration: none;
+            color: inherit;
+        }
+
+        /* ==================== TOP PRE-SALE BANNER ==================== */
+        :root { --promo-h: 0px; }
+
+        .promo-top-bar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: var(--promo-h);
+            background: linear-gradient(180deg, #16181d 0%, #0d0e11 100%);
+            border-bottom: 1px solid rgba(232, 232, 238, 0.28);
+            box-shadow: 0 4px 18px rgba(0, 0, 0, 0.28);
+            color: #e2e8f0;
+            font-size: 13px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 14px;
+            padding: 0 16px;
+            z-index: 100;
+        }
+
+        .promo-pill {
+            background: #e6e6ec;
+            color: #07080a;
+            padding: 3px 10px;
+            border-radius: 9999px;
+            font-size: 11px;
+            font-weight: 800;
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+            flex-shrink: 0;
+        }
+
+        .promo-desc {
+            font-size: 13.5px;
+            font-weight: 800;
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
+            color: #ffffff;
+            white-space: nowrap;
+        }
+
+        .promo-timer {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 14px;
+            color: #e6e6ec;
+            font-weight: 700;
+            flex-shrink: 0;
+        }
+
+        /* ==================== HERO RUNWAY (THE STUDIO STAGE) ==================== */
+        #hero-runway {
+            position: relative;
+            min-height: 100vh;
+            background: radial-gradient(ellipse at 57% 44%, #c5c6c4 0%, #a3a4a3 43%, #747679 100%);
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            overflow: hidden;
+            padding-top: var(--promo-h);
+        }
+
+        /* Fixed Navigation Header - Clean & Direct (No "by") */
+        header.tvb-header {
+            position: absolute;
+            top: calc(var(--promo-h) + 16px);
+            left: clamp(20px, 4vw, 50px);
+            right: clamp(20px, 4vw, 50px);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            z-index: 40;
+        }
+
+        .brand-title {
+            font-size: 24px;
+            font-weight: 900;
+            letter-spacing: -1px;
+            color: #111111;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .brand-star-icon {
+            color: #3a3a40;
+            font-size: 22px;
+            display: inline-block;
+            filter: drop-shadow(0 2px 6px rgba(58, 58, 64, 0.4));
+        }
+
+        .tvb-nav-menu {
+            display: flex;
+            align-items: center;
+            gap: clamp(14px, 2.5vw, 32px);
+        }
+
+        .tvb-nav-menu a {
+            font-size: 13.5px;
+            font-weight: 700;
+            color: #222222;
+            transition: color 0.15s ease, transform 0.15s ease;
+        }
+
+        .tvb-nav-menu a:hover {
+            color: #000000;
+            transform: translateY(-1px);
+        }
+
+        .btn-get-rack {
+            background: #111317;
+            color: #ffffff;
+            font-size: 13px;
+            font-weight: 800;
+            padding: 9px 20px;
+            border-radius: 9999px;
+            box-shadow: 0 4px 14px rgba(0, 0, 0, 0.2);
+            transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .btn-get-rack:hover {
+            background: #000000;
+            transform: translateY(-2px);
+            color: #e6e6ec;
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        /* Hero Main Stage: 2-Column Split */
+        .hero-main-stage {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            max-width: 1340px;
+            margin: 0 auto;
+            width: 100%;
+            padding: clamp(65px, 8vh, 90px) clamp(20px, 4vw, 40px) 25px;
+            gap: clamp(24px, 4vw, 60px);
+            z-index: 10;
+        }
+
+        /* ==================== LEFT COLUMN: STAR & CAPACIDADES ==================== */
+        .star-stage-col {
+            flex: 0 1 420px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .star-character-wrapper {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
+        }
+
+        /* Header above Star (Requested by Willie) */
+        .star-branding-lead {
+            text-align: center;
+            margin-bottom: 4px;
+        }
+
+        .hero-kicker-tag {
+            font-size: 11px;
+            font-weight: 900;
+            letter-spacing: 0.18em;
+            text-transform: uppercase;
+            color: #2a2a2a;
+            display: block;
+            margin-bottom: 2px;
+        }
+
+        .hero-brand-title {
+            font-size: clamp(26px, 3.2vw, 36px);
+            font-weight: 900;
+            letter-spacing: -1.2px;
+            color: #0b0c0e;
+            line-height: 1.1;
+        }
+
+        .hero-brand-title span {
+            color: #3a3a40;
+            filter: drop-shadow(0 2px 8px rgba(58, 58, 64, 0.4));
+        }
+
+        /* Star Dot Avatar Canvas */
+        #starAvatar {
+            width: 250px;
+            height: 250px;
+            display: grid;
+            place-items: center;
+            cursor: pointer;
+            filter: drop-shadow(0 18px 36px rgba(232, 232, 238, 0.45)) drop-shadow(0 0 20px rgba(230, 230, 238, 0.3));
+            transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            user-select: none;
+            position: relative;
+            z-index: 2;
+            margin-top: 4px;
+        }
+
+        #starAvatar:hover {
+            transform: scale(1.05);
+        }
+
+        #starAvatar:active {
+            transform: scale(0.96);
+        }
+
+        .star-pedestal-shadow {
+            width: 200px;
+            height: 22px;
+            background: radial-gradient(ellipse at center, rgba(30, 30, 30, 0.35) 0%, rgba(50, 50, 50, 0.1) 50%, transparent 75%);
+            border-radius: 50%;
+            margin-top: -10px;
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        /* Hero CTA Module (Clean OFFSZN Button & Pricing Format) */
+        .hero-cta-group {
+            margin-top: 18px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+            width: 100%;
+        }
+
+        .hero-price-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(18, 20, 24, 0.85);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            padding: 4px 14px;
+            border-radius: 9999px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        .hero-price-strike {
+            color: rgba(255, 255, 255, 0.45);
+            text-decoration: line-through;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .hero-price-main {
+            color: #ffffff;
+            font-weight: 800;
+            font-size: 13.5px;
+        }
+
+        .hero-price-discount {
+            background: #e6e6ec;
+            color: #08090b;
+            font-size: 10px;
+            font-weight: 900;
+            padding: 2px 7px;
+            border-radius: 9999px;
+            letter-spacing: 0.04em;
+        }
+
+        .hero-primary-cta {
+            background: #111317;
+            color: #ffffff;
+            font-size: 14.5px;
+            font-weight: 800;
+            padding: 13px 32px;
+            border-radius: 9999px;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.28);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+            border: 1px solid rgba(255, 255, 255, 0.14);
+            text-decoration: none;
+        }
+
+        .hero-primary-cta:hover {
+            background: #000000;
+            color: #e6e6ec;
+            transform: translateY(-2px);
+            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.38);
+            border-color: rgba(232, 232, 238, 0.5);
+        }
+
+        .hero-primary-cta:active {
+            transform: translateY(0);
+        }
+
+        .hero-cta-specs {
+            font-size: 11px;
+            color: #242424;
+            font-weight: 800;
+            letter-spacing: 0.05em;
+            text-align: center;
+        }
+
+        /* Capacidades Clave Card (Willie liked this) */
+        .star-superpowers-card {
+            margin-top: 14px;
+            background: rgba(255, 255, 255, 0.75);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.9);
+            border-radius: 18px;
+            padding: 16px 18px;
+            width: 100%;
+            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.08);
+        }
+
+        .superpower-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+        }
+
+        .superpower-tag {
+            font-size: 10.5px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: #444444;
+        }
+
+        .superpower-badge-live {
+            background: #111317;
+            color: #e6e6ec;
+            font-size: 10.5px;
+            font-weight: 800;
+            padding: 2px 8px;
+            border-radius: 9999px;
+        }
+
+        .superpowers-list {
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .superpower-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            font-size: 13px;
+            color: #1a1a1a;
+            line-height: 1.4;
+        }
+
+        .superpower-icon {
+            width: 24px;
+            height: 24px;
+            border-radius: 6px;
+            background: #111317;
+            color: #e6e6ec;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            flex-shrink: 0;
+            margin-top: 1px;
+        }
+
+        .superpower-item strong {
+            font-weight: 800;
+            color: #000000;
+        }
+
+        /* ==================== RIGHT COLUMN: ELIGE TU ARTISTA & REPRODUCTOR DIRECTO ==================== */
+        .artist-experience-col {
+            flex: 1 1 720px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            max-width: 760px;
+            width: 100%;
+        }
+
+        .hero-selector-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 10px;
+            padding: 0 4px;
+        }
+
+        .selector-kicker-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .selector-kicker-tag {
+            font-size: 11.5px;
+            font-weight: 900;
+            letter-spacing: 0.14em;
+            text-transform: uppercase;
+            color: #111111;
+            background: rgba(255, 255, 255, 0.85);
+            padding: 4px 12px;
+            border-radius: 9999px;
+            border: 1px solid rgba(0, 0, 0, 0.08);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+        }
+
+        /* 5 Front-Facing Artist Cards */
+        .artists-grid-front {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 12px;
+            width: 100%;
+        }
+
+        @media (max-width: 900px) {
+            .artists-grid-front {
+                display: flex;
+                overflow-x: auto;
+                scroll-snap-type: x mandatory;
+                gap: 12px;
+                padding-bottom: 8px;
+                -webkit-overflow-scrolling: touch;
+                scrollbar-width: none;
+            }
+            .artists-grid-front::-webkit-scrollbar {
+                display: none;
+            }
+            .artist-card-front {
+                flex: 0 0 115px;
+                scroll-snap-align: start;
+            }
+        }
+
+        .artist-card-front {
+            background: #12151d;
+            border: 1.5px solid rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            padding: 8px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+            position: relative;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.16);
+            user-select: none;
+            overflow: hidden;
+        }
+
+        .artist-card-front:hover {
+            transform: translateY(-4px);
+            border-color: rgba(232, 232, 238, 0.5);
+            box-shadow: 0 12px 28px rgba(0, 0, 0, 0.28);
+        }
+
+        .artist-card-front.active {
+            background: #181d28;
+            border-color: #e6e6ec;
+            box-shadow: 0 0 0 2px rgba(232, 232, 238, 0.35), 0 14px 32px rgba(0, 0, 0, 0.35);
+            transform: translateY(-4px) scale(1.02);
+        }
+
+        .artist-card-img-wrap {
+            width: 100%;
+            aspect-ratio: 1 / 1;
+            border-radius: 12px;
+            overflow: hidden;
+            position: relative;
+            background: #000000;
+        }
+
+        .artist-card-img-wrap img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+            transition: transform 0.35s ease;
+        }
+
+        .artist-card-front:hover .artist-card-img-wrap img {
+            transform: scale(1.06);
+        }
+
+        .artist-card-front.active .artist-card-img-wrap img {
+            transform: scale(1.04);
+        }
+
+        .artist-card-badge {
+            position: absolute;
+            top: 6px;
+            right: 6px;
+            background: rgba(0, 0, 0, 0.75);
+            backdrop-filter: blur(6px);
+            color: #e6e6ec;
+            font-size: 9.5px;
+            font-weight: 800;
+            padding: 2px 6px;
+            border-radius: 6px;
+            letter-spacing: 0.05em;
+            display: none;
+        }
+
+        .artist-card-front.active .artist-card-badge {
+            display: inline-block;
+        }
+
+        .artist-card-info {
+            width: 100%;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+            padding: 0 2px 4px;
+        }
+
+        .artist-card-name {
+            font-size: 13.5px;
+            font-weight: 800;
+            color: #ffffff;
+            letter-spacing: -0.2px;
+            transition: color 0.2s ease;
+        }
+
+        .artist-card-front.active .artist-card-name {
+            color: #e6e6ec;
+        }
+
+        .artist-card-genre {
+            font-size: 10px;
+            font-weight: 700;
+            color: #8a96a8;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+        }
+
+        .artist-card-front.active .artist-card-genre {
+            color: #cbd5e1;
+        }
+
+        /* --- DIRECT AUDIO PLAYER DEBAJO --- */
+        .star-player-panel {
+            background: rgba(13, 16, 23, 0.94);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            border-radius: 20px;
+            padding: 18px 22px;
+            box-shadow: 0 20px 45px rgba(0, 0, 0, 0.35);
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+            width: 100%;
+            position: relative;
+        }
+
+        .player-top-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 14px;
+        }
+
+        .player-track-meta {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .player-avatar-thumb {
+            width: 44px;
+            height: 44px;
+            border-radius: 10px;
+            object-fit: cover;
+            border: 1.5px solid rgba(232, 232, 238, 0.6);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+            flex-shrink: 0;
+        }
+
+        .player-track-info h4 {
+            font-size: 15px;
+            font-weight: 800;
+            color: #ffffff;
+            margin: 0;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .player-track-info p {
+            font-size: 11.5px;
+            font-weight: 600;
+            color: #e6e6ec;
+            margin: 2px 0 0;
+        }
+
+        .player-tag-pill {
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: #94a3b8;
+            font-size: 11px;
+            font-weight: 700;
+            padding: 4px 10px;
+            border-radius: 9999px;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        /* Scrubber & Waveform */
+        .player-waveform-scrubber {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .player-bars-canvas {
+            display: flex;
+            align-items: flex-end;
+            justify-content: space-between;
+            height: 38px;
+            gap: 3px;
+            padding: 4px 0;
+            cursor: pointer;
+        }
+
+        .player-wave-bar {
+            flex: 1;
+            background: rgba(255, 255, 255, 0.18);
+            border-radius: 3px;
+            min-height: 4px;
+            transition: background 0.15s ease, height 0.1s ease;
+        }
+
+        .player-wave-bar.played {
+            background: #e6e6ec;
+        }
+
+        .star-player-panel.is-playing .player-wave-bar.played {
+            background: linear-gradient(180deg, #e6e6ec, #f59e0b);
+            box-shadow: 0 0 8px rgba(232, 232, 238, 0.4);
+        }
+
+        .player-wave-bar.playing-anim {
+            background: #e6e6ec;
+            animation: barPulse 0.55s ease-in-out infinite alternate;
+        }
+
+        @keyframes barPulse {
+            from { transform: scaleY(0.8); opacity: 0.8; }
+            to   { transform: scaleY(1.25); opacity: 1; }
+        }
+
+        /* Progress track */
+        .player-progress-track {
+            width: 100%;
+            height: 6px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 9999px;
+            position: relative;
+            cursor: pointer;
+            overflow: hidden;
+        }
+
+        .player-progress-fill {
+            position: absolute;
+            top: 0;
+            left: 0;
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, #e6e6ec, #ffbe1a);
+            border-radius: 9999px;
+            transition: width 0.08s linear;
+            box-shadow: 0 0 10px rgba(232, 232, 238, 0.6);
+        }
+
+        /* Controls row */
+        .player-controls-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+        }
+
+        .player-btns-left {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .player-circle-play-btn {
+            width: 46px;
+            height: 46px;
+            border-radius: 50%;
+            background: #e6e6ec;
+            color: #0b0d12;
+            border: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            cursor: pointer;
+            transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+            box-shadow: 0 4px 16px rgba(232, 232, 238, 0.4);
+        }
+
+        .player-circle-play-btn:hover {
+            transform: scale(1.08);
+            background: #ffdb66;
+            box-shadow: 0 6px 22px rgba(232, 232, 238, 0.55);
+        }
+
+        .player-circle-play-btn:active {
+            transform: scale(0.96);
+        }
+
+        .player-step-btn {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            color: #cbd5e1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+
+        .player-step-btn:hover {
+            background: rgba(255, 255, 255, 0.16);
+            color: #ffffff;
+            transform: scale(1.05);
+        }
+
+        .player-time-label {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 12px;
+            font-weight: 700;
+            color: #94a3b8;
+            letter-spacing: 0.02em;
+        }
+
+        .player-time-label span.curr {
+            color: #ffffff;
+        }
+
+        .player-controls-right {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+
+        .player-vol-btn {
+            background: transparent;
+            border: none;
+            color: #94a3b8;
+            font-size: 16px;
+            cursor: pointer;
+            transition: color 0.15s ease;
+        }
+
+        .player-vol-btn:hover {
+            color: #ffffff;
+        }
+
+        .player-status-badge {
+            font-size: 11px;
+            font-weight: 700;
+            color: #4ade80;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .player-status-badge::before {
+            content: '';
+            width: 6px;
+            height: 6px;
+            background: #22c55e;
+            border-radius: 50%;
+            display: inline-block;
+        }
+
+        /* Scroll explore indicator */
+        #scroll-explore {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            font-size: 10.5px;
+            font-weight: 800;
+            letter-spacing: 0.15em;
+            color: #222222;
+            padding-bottom: 18px;
+            text-transform: uppercase;
+            z-index: 20;
+            transition: transform 0.2s ease, color 0.2s ease;
+        }
+
+        #scroll-explore span {
+            font-size: 14px;
+            animation: bounceArrow 1.8s infinite;
+        }
+
+        #scroll-explore:hover {
+            color: #000000;
+            transform: translateY(2px);
+        }
+
+        @keyframes bounceArrow {
+            0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
+            40% { transform: translateY(6px); }
+            60% { transform: translateY(3px); }
+        }
+
+        /* ==================== DARK REST-OF-SITE (THE SUITE) ==================== */
+        #rest-of-site {
+            background: #090a0d;
+            color: #f1f5f9;
+            position: relative;
+        }
+
+        .site-container {
+            max-width: 1280px;
+            margin: 0 auto;
+            padding: clamp(60px, 8vh, 100px) clamp(20px, 4vw, 50px);
+        }
+
+        .section-kicker {
+            font-size: 12px;
+            font-weight: 800;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            color: #e6e6ec;
+            margin-bottom: 12px;
+            display: inline-block;
+        }
+
+        .section-headline-lg {
+            font-size: clamp(30px, 3.8vw, 48px);
+            font-weight: 800;
+            letter-spacing: -1.2px;
+            line-height: 1.15;
+            color: #ffffff;
+            margin-bottom: 16px;
+        }
+
+        /* ==================== SECTION: ALL PLUGINS INCLUDED ==================== */
+        .tvb-effects-section {
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            background: #0c0e12;
+        }
+
+        .effects-rail-wrapper {
+            position: relative;
+            margin-top: 36px;
+            margin-bottom: 30px;
+            overflow-x: auto;
+            scrollbar-width: none;
+            -ms-overflow-style: none;
+            padding-bottom: 8px;
+        }
+
+        .effects-rail-wrapper::-webkit-scrollbar {
+            display: none;
+        }
+
+        .effects-rail {
+            display: flex;
+            gap: 14px;
+            min-width: max-content;
+        }
+
+        .effect-module-tab {
+            background: #14161d;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 16px;
+            padding: 12px 14px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+            cursor: pointer;
+            transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+            width: 130px;
+        }
+
+        .module-img-box {
+            width: 100%;
+            height: 70px;
+            background: #0a0b0e;
+            border-radius: 10px;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid rgba(255, 255, 255, 0.04);
+        }
+
+        .module-img-box img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.3s ease;
+        }
+
+        .effect-module-tab:hover .module-img-box img {
+            transform: scale(1.08);
+        }
+
+        .module-tab-name {
+            font-size: 13px;
+            font-weight: 700;
+            color: #94a3b8;
+            transition: color 0.2s ease;
+        }
+
+        .effect-module-tab:hover {
+            border-color: rgba(255, 255, 255, 0.25);
+            transform: translateY(-2px);
+        }
+
+        .effect-module-tab:hover .module-tab-name {
+            color: #ffffff;
+        }
+
+        .effect-module-tab.is-selected {
+            background: #1c202a;
+            border-color: #e6e6ec;
+            box-shadow: 0 4px 20px rgba(232, 232, 238, 0.15);
+        }
+
+        .effect-module-tab.is-selected .module-tab-name {
+            color: #e6e6ec;
+        }
+
+        /* Detail Card */
+        .effects-detail-card {
+            background: #13161e;
+            border: 1px solid rgba(255, 255, 255, 0.09);
+            border-radius: 24px;
+            padding: clamp(24px, 4vw, 44px);
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 40px;
+            align-items: center;
+        }
+
+        .detail-copy-col {
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+        }
+
+        .detail-category-badge {
+            font-size: 11px;
+            font-weight: 800;
+            letter-spacing: 0.1em;
+            color: #e6e6ec;
+            text-transform: uppercase;
+        }
+
+        .detail-title {
+            font-size: 32px;
+            font-weight: 800;
+            letter-spacing: -0.8px;
+            color: #ffffff;
+        }
+
+        .detail-title strong {
+            color: #e6e6ec;
+        }
+
+        .detail-desc {
+            font-size: 15px;
+            line-height: 1.6;
+            color: #94a3b8;
+        }
+
+        .detail-bullets {
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-top: 8px;
+        }
+
+        .detail-bullets li {
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            font-size: 13.5px;
+            color: #cbd5e1;
+        }
+
+        .detail-bullets li i {
+            color: #e6e6ec;
+            font-size: 16px;
+            margin-top: 1px;
+        }
+
+        .detail-listening-box {
+            background: #090b0e;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 18px;
+            padding: 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 18px;
+        }
+
+        .audio-signal-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-size: 12px;
+            font-weight: 700;
+            letter-spacing: 0.05em;
+            color: #94a3b8;
+        }
+
+        .signal-status-pill {
+            background: rgba(34, 197, 94, 0.15);
+            color: #4ade80;
+            padding: 3px 10px;
+            border-radius: 9999px;
+            font-size: 11px;
+            font-weight: 800;
+        }
+
+        .svg-bars-container {
+            height: 90px;
+            display: flex;
+            align-items: flex-end;
+            gap: 3px;
+            background: rgba(255, 255, 255, 0.02);
+            border-radius: 12px;
+            padding: 10px;
+            overflow: hidden;
+        }
+
+        .svg-bar {
+            flex: 1;
+            background: #2a3140;
+            border-radius: 3px;
+            height: 18%;
+            min-height: 4px;
+            transition: height 0.08s ease, background 0.15s ease;
+        }
+
+        .svg-bar.active {
+            background: linear-gradient(180deg, #e6e6ec 0%, #d97706 100%);
+            box-shadow: 0 0 8px rgba(232, 232, 238, 0.4);
+        }
+
+        .audio-transport-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 14px;
+        }
+
+        .audio-btn-play {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            background: #e6e6ec;
+            color: #000000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            flex-shrink: 0;
+            transition: transform 0.2s ease, background 0.2s ease;
+        }
+
+        .audio-btn-play:hover {
+            transform: scale(1.08);
+            background: #ffdb66;
+        }
+
+        .compare-toggle-group {
+            display: flex;
+            background: #141720;
+            border-radius: 9999px;
+            padding: 3px;
+            gap: 2px;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .compare-btn {
+            background: transparent;
+            color: #94a3b8;
+            font-size: 12px;
+            font-weight: 700;
+            padding: 6px 14px;
+            border-radius: 9999px;
+            transition: all 0.2s ease;
+        }
+
+        .compare-btn.active {
+            background: #ffffff;
+            color: #000000;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+        }
+
+        .time-display {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 12px;
+            color: #64748b;
+        }
+
+        /* Inline CTA Banner */
+        .inline-cta-banner {
+            margin-top: 40px;
+            background: #11141c;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 18px;
+            padding: 24px 30px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+
+        .cta-offer-btns {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            flex-wrap: wrap;
+        }
+
+        .btn-cta-dark {
+            background: #e6e6ec;
+            color: #000000;
+            font-size: 14px;
+            font-weight: 800;
+            padding: 12px 24px;
+            border-radius: 9999px;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .btn-cta-dark:hover {
+            background: #ffdb66;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(232, 232, 238, 0.35);
+        }
+
+        .btn-cta-outline {
+            background: transparent;
+            color: #ffffff;
+            font-size: 14px;
+            font-weight: 700;
+            padding: 11px 22px;
+            border-radius: 9999px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            transition: all 0.2s ease;
+        }
+
+        .btn-cta-outline:hover {
+            border-color: #ffffff;
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        /* ==================== SECTION: WALKTHROUGH ==================== */
+        .walkthrough-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 24px;
+            margin-top: 40px;
+        }
+
+        .walkthrough-step-card {
+            background: #11141b;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 20px;
+            padding: 28px 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            position: relative;
+            transition: transform 0.2s ease, border-color 0.2s ease;
+        }
+
+        .walkthrough-step-card:hover {
+            transform: translateY(-4px);
+            border-color: rgba(232, 232, 238, 0.4);
+        }
+
+        .step-num-pill {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 12px;
+            font-weight: 800;
+            color: #e6e6ec;
+            background: rgba(232, 232, 238, 0.12);
+            padding: 4px 10px;
+            border-radius: 9999px;
+            align-self: flex-start;
+        }
+
+        .walkthrough-step-card h3 {
+            font-size: 19px;
+            font-weight: 800;
+            color: #ffffff;
+            letter-spacing: -0.4px;
+        }
+
+        .walkthrough-step-card p {
+            font-size: 14px;
+            line-height: 1.55;
+            color: #94a3b8;
+        }
+
+        /* ==================== SECTION: AUDIENCE QUALIFICATION ==================== */
+        .audience-split-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 28px;
+            margin-top: 40px;
+        }
+
+        .audience-card {
+            background: #11141c;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 22px;
+            padding: clamp(24px, 4vw, 36px);
+        }
+
+        .audience-card.for-you {
+            border-top: 3px solid #22c55e;
+        }
+
+        .audience-card.not-for-you {
+            border-top: 3px solid #ef4444;
+        }
+
+        .audience-card h3 {
+            font-size: 22px;
+            font-weight: 800;
+            color: #ffffff;
+            margin-bottom: 20px;
+        }
+
+        .audience-list {
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .audience-list li {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            font-size: 14px;
+            line-height: 1.5;
+            color: #cbd5e1;
+        }
+
+        .audience-list li i.icon-check {
+            color: #22c55e;
+            font-size: 18px;
+            flex-shrink: 0;
+            margin-top: 1px;
+        }
+
+        .audience-list li i.icon-cross {
+            color: #ef4444;
+            font-size: 18px;
+            flex-shrink: 0;
+            margin-top: 1px;
+        }
+
+        /* ==================== SECTION: REAL TESTIMONIALS (FROM EASY MIX) ==================== */
+        .testimonios-section {
+            padding: clamp(70px, 9vh, 110px) 0;
+            position: relative;
+            background: #08090c;
+            overflow: hidden;
+            border-top: 1px solid rgba(255, 255, 255, 0.06);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+        }
+
+        .testimonios-header {
+            text-align: center;
+            max-width: 760px;
+            margin: 0 auto 44px;
+            padding: 0 20px;
+        }
+
+        .testimonios-title {
+            font-size: clamp(28px, 3.8vw, 44px);
+            font-weight: 800;
+            letter-spacing: -1.2px;
+            color: #ffffff;
+            margin-bottom: 12px;
+        }
+
+        .testimonios-subtitle {
+            font-size: 15px;
+            color: #94a3b8;
+            line-height: 1.5;
+        }
+
+        .testi-carousel-wrapper {
+            position: relative;
+            width: 100%;
+            overflow: hidden;
+            padding: 10px 0;
+        }
+
+        .testi-carousel-fade-left,
+        .testi-carousel-fade-right {
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            width: 140px;
+            z-index: 10;
+            pointer-events: none;
+        }
+
+        .testi-carousel-fade-left {
+            left: 0;
+            background: linear-gradient(to right, #08090c 0%, rgba(8, 9, 12, 0) 100%);
+        }
+
+        .testi-carousel-fade-right {
+            right: 0;
+            background: linear-gradient(to left, #08090c 0%, rgba(8, 9, 12, 0) 100%);
+        }
+
+        .testi-marquee-row {
+            display: flex;
+            width: 100%;
+            overflow: hidden;
+            margin-bottom: 18px;
+        }
+
+        .testi-marquee-group {
+            display: flex;
+            gap: 16px;
+            min-width: max-content;
+        }
+
+        .testi-marquee-group.scroll-left {
+            animation: marqueeLeft 48s linear infinite;
+        }
+
+        .testi-marquee-group.scroll-right {
+            animation: marqueeRight 48s linear infinite;
+        }
+
+        .testi-marquee-row:hover .testi-marquee-group {
+            animation-play-state: paused;
+        }
+
+        @keyframes marqueeLeft {
+            0% { transform: translateX(0); }
+            100% { transform: translateX(-50%); }
+        }
+
+        @keyframes marqueeRight {
+            0% { transform: translateX(-50%); }
+            100% { transform: translateX(0); }
+        }
+
+        .testi-card {
+            position: relative;
+            width: 280px;
+            height: 190px;
+            background: #11141b;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 14px;
+            overflow: hidden;
+            cursor: pointer;
+            flex-shrink: 0;
+            transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.25s ease, box-shadow 0.25s ease;
+        }
+
+        .testi-card img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            object-position: top center;
+            display: block;
+            transition: transform 0.3s ease;
+        }
+
+        .testi-card-overlay {
+            position: absolute;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.55);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            transition: opacity 0.2s ease;
+        }
+
+        .testi-overlay-badge {
+            background: #e6e6ec;
+            color: #000000;
+            font-size: 12px;
+            font-weight: 800;
+            padding: 6px 14px;
+            border-radius: 9999px;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+            transform: translateY(6px);
+            transition: transform 0.2s ease;
+        }
+
+        .testi-card:hover {
+            transform: translateY(-4px) scale(1.02);
+            border-color: #e6e6ec;
+            box-shadow: 0 10px 28px rgba(0, 0, 0, 0.4);
+        }
+
+        .testi-card:hover img {
+            transform: scale(1.05);
+        }
+
+        .testi-card:hover .testi-card-overlay {
+            opacity: 1;
+        }
+
+        .testi-card:hover .testi-overlay-badge {
+            transform: translateY(0);
+        }
+
+        /* Lightbox Modal */
+        #lightbox-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.92);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 99999;
+            padding: 20px;
+            cursor: zoom-out;
+            opacity: 0;
+            transition: opacity 0.25s ease;
+        }
+
+        #lightbox-overlay.active {
+            display: flex;
+            opacity: 1;
+        }
+
+        #lightbox-img {
+            max-width: 90vw;
+            max-height: 85vh;
+            border-radius: 12px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.8), 0 0 0 1px rgba(255, 255, 255, 0.1);
+            transform: scale(0.95);
+            transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+            cursor: default;
+        }
+
+        #lightbox-overlay.active #lightbox-img {
+            transform: scale(1);
+        }
+
+        .lightbox-close-btn {
+            position: absolute;
+            top: 24px;
+            right: 28px;
+            background: rgba(255, 255, 255, 0.15);
+            color: #ffffff;
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 22px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .lightbox-close-btn:hover {
+            background: #e6e6ec;
+            color: #000000;
+            transform: scale(1.1);
+        }
+
+        /* ==================== SECTION: PRICING ==================== */
+        .pricing-section {
+            background: #0a0c10;
+            border-top: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .pricing-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 28px;
+            max-width: 960px;
+            margin: 40px auto 0;
+        }
+
+        .pricing-card {
+            background: #11141b;
+            border: 1px solid rgba(255, 255, 255, 0.09);
+            border-radius: 24px;
+            padding: clamp(28px, 4vw, 40px);
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            position: relative;
+            transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .pricing-card:hover {
+            transform: translateY(-4px);
+            border-color: rgba(255, 255, 255, 0.25);
+            box-shadow: 0 16px 40px rgba(0, 0, 0, 0.35);
+        }
+
+        .pricing-card.featured {
+            border-color: #e6e6ec;
+            background: linear-gradient(180deg, #161922 0%, #11141b 100%);
+            box-shadow: 0 12px 36px rgba(232, 232, 238, 0.12);
+        }
+
+        .pricing-popular-badge {
+            position: absolute;
+            top: -13px;
+            right: 28px;
+            background: #e6e6ec;
+            color: #000000;
+            font-size: 11px;
+            font-weight: 800;
+            padding: 4px 12px;
+            border-radius: 9999px;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+        }
+
+        .pricing-title {
+            font-size: 20px;
+            font-weight: 800;
+            color: #ffffff;
+            margin-bottom: 8px;
+        }
+
+        .pricing-subtitle {
+            font-size: 13.5px;
+            color: #94a3b8;
+            margin-bottom: 24px;
+            line-height: 1.45;
+        }
+
+        .price-figure-row {
+            display: flex;
+            align-items: baseline;
+            gap: 6px;
+            margin-bottom: 8px;
+        }
+
+        .price-amount {
+            font-size: 50px;
+            font-weight: 900;
+            color: #ffffff;
+            letter-spacing: -1.5px;
+        }
+
+        .price-currency {
+            font-size: 20px;
+            font-weight: 800;
+            color: #e6e6ec;
+        }
+
+        .price-term {
+            font-size: 14px;
+            color: #94a3b8;
+            font-weight: 600;
+        }
+
+        .pricing-savings-note {
+            font-size: 12.5px;
+            font-weight: 700;
+            color: #4ade80;
+            margin-bottom: 24px;
+        }
+
+        .pricing-perks-list {
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin-bottom: 30px;
+            border-top: 1px solid rgba(255, 255, 255, 0.08);
+            padding-top: 20px;
+        }
+
+        .pricing-perks-list li {
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            font-size: 13.5px;
+            color: #cbd5e1;
+        }
+
+        .pricing-perks-list li i {
+            color: #e6e6ec;
+            font-size: 16px;
+            margin-top: 1px;
+        }
+
+        .btn-buy-tier {
+            width: 100%;
+            padding: 15px;
+            border-radius: 9999px;
+            font-size: 14.5px;
+            font-weight: 800;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .btn-buy-tier.primary {
+            background: #e6e6ec;
+            color: #000000;
+        }
+
+        .btn-buy-tier.primary:hover {
+            background: #ffdb66;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(232, 232, 238, 0.3);
+        }
+
+        .btn-buy-tier.secondary {
+            background: rgba(255, 255, 255, 0.08);
+            color: #ffffff;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+        }
+
+        .btn-buy-tier.secondary:hover {
+            background: rgba(255, 255, 255, 0.15);
+            border-color: #ffffff;
+            transform: translateY(-2px);
+        }
+
+        .pricing-guarantee-footer {
+            margin-top: 36px;
+            text-align: center;
+            font-size: 13px;
+            color: #64748b;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+
+        .pricing-guarantee-footer span {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .pricing-guarantee-footer i {
+            color: #e6e6ec;
+        }
+
+        /* ==================== FAQ ACCORDION ==================== */
+        .faq-accordion-list {
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+            max-width: 860px;
+            margin: 40px auto 0;
+        }
+
+        .faq-card {
+            background: #11141b;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 16px;
+            overflow: hidden;
+            transition: border-color 0.2s ease;
+        }
+
+        .faq-question-btn {
+            width: 100%;
+            background: transparent;
+            padding: 20px 24px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            color: #ffffff;
+            font-size: 16px;
+            font-weight: 700;
+            text-align: left;
+            gap: 16px;
+        }
+
+        .faq-question-btn i {
+            font-size: 18px;
+            color: #e6e6ec;
+            transition: transform 0.25s ease;
+        }
+
+        .faq-answer {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s cubic-bezier(0.16, 1, 0.3, 1), padding 0.3s ease;
+            padding: 0 24px;
+            font-size: 14.5px;
+            line-height: 1.6;
+            color: #94a3b8;
+        }
+
+        .faq-card.is-open {
+            border-color: rgba(232, 232, 238, 0.4);
+        }
+
+        .faq-card.is-open .faq-question-btn i {
+            transform: rotate(180deg);
+        }
+
+        .faq-card.is-open .faq-answer {
+            max-height: 200px;
+            padding-bottom: 20px;
+        }
+
+        /* ==================== SITE FOOTER ==================== */
+        footer.site-footer {
+            border-top: 1px solid rgba(255, 255, 255, 0.08);
+            padding: 40px clamp(20px, 4vw, 50px);
+            background: #060709;
+            color: #64748b;
+            font-size: 13px;
+        }
+
+        .footer-inner {
+            max-width: 1280px;
+            margin: 0 auto;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+
+        .footer-brand {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: #ffffff;
+            font-weight: 800;
+            font-size: 16px;
+        }
+
+        .footer-links {
+            display: flex;
+            gap: 24px;
+        }
+
+        .footer-links a:hover {
+            color: #e6e6ec;
+        }        /* ==================== NUEVAS SECCIONES EXPLICATIVAS ==================== */
+        /* 1. Cadena Vocal Visual Interactiva */
+        .chain-flow-section {
+            background: #090b10;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+        }
+
+        .chain-flow-track {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 10px;
+            margin-top: 36px;
+            position: relative;
+        }
+
+        @media (max-width: 1024px) {
+            .chain-flow-track {
+                grid-template-columns: repeat(4, 1fr);
+            }
+        }
+
+        @media (max-width: 640px) {
+            .chain-flow-track {
+                display: flex;
+                overflow-x: auto;
+                scroll-snap-type: x mandatory;
+                gap: 12px;
+                padding-bottom: 12px;
+                -webkit-overflow-scrolling: touch;
+                scrollbar-width: none;
+            }
+            .chain-flow-track::-webkit-scrollbar {
+                display: none;
+            }
+        }
+
+        .chain-node {
+            background: #11141c;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 16px;
+            padding: 18px 14px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+            position: relative;
+        }
+
+        @media (max-width: 640px) {
+            .chain-node {
+                flex: 0 0 170px;
+                scroll-snap-align: start;
+            }
+        }
+
+        .chain-node:hover {
+            transform: translateY(-4px);
+            border-color: rgba(232, 232, 238, 0.45);
+            box-shadow: 0 10px 24px rgba(0, 0, 0, 0.35);
+        }
+
+        .chain-node-num {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 10px;
+            font-weight: 800;
+            color: #e6e6ec;
+            letter-spacing: 0.08em;
+        }
+
+        .chain-node-icon {
+            width: 36px;
+            height: 36px;
+            border-radius: 10px;
+            background: rgba(232, 232, 238, 0.12);
+            color: #e6e6ec;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+        }
+
+        .chain-node-title {
+            font-size: 13.5px;
+            font-weight: 800;
+            color: #ffffff;
+            margin-top: 2px;
+        }
+
+        .chain-node-desc {
+            font-size: 11.5px;
+            color: #94a3b8;
+            line-height: 1.45;
+        }
+
+        /* 2. Cuatro Pilares Clave */
+        .pillars-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+            margin-top: 36px;
+        }
+
+        @media (max-width: 768px) {
+            .pillars-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .pillar-card {
+            background: #11141c;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 20px;
+            padding: 28px 24px;
+            display: flex;
+            gap: 18px;
+            align-items: flex-start;
+            transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .pillar-card:hover {
+            transform: translateY(-3px);
+            border-color: rgba(255, 255, 255, 0.22);
+            box-shadow: 0 12px 28px rgba(0, 0, 0, 0.3);
+        }
+
+        .pillar-icon-box {
+            width: 48px;
+            height: 48px;
+            border-radius: 14px;
+            background: linear-gradient(135deg, rgba(232, 232, 238, 0.18), rgba(232, 232, 238, 0.05));
+            border: 1px solid rgba(232, 232, 238, 0.3);
+            color: #e6e6ec;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 22px;
+            flex-shrink: 0;
+        }
+
+        .pillar-content h3 {
+            font-size: 17px;
+            font-weight: 800;
+            color: #ffffff;
+            margin-bottom: 6px;
+            letter-spacing: -0.3px;
+        }
+
+        .pillar-content p {
+            font-size: 13.5px;
+            color: #94a3b8;
+            line-height: 1.55;
+        }
+
+        /* ==================== 3. COMPARATIVA MATRIZ (ALL THE CONTROL. NONE OF THE CLUTTER) ==================== */
+        .matrix-section-wrap {
+            padding: 70px 0 50px;
+            text-align: center;
+        }
+
+        .matrix-header-center {
+            max-width: 720px;
+            margin: 0 auto 40px;
+            text-align: center;
+        }
+
+        .matrix-main-headline {
+            font-size: clamp(1.85rem, 3.6vw, 2.9rem);
+            font-weight: 800;
+            letter-spacing: -0.035em;
+            color: #ffffff;
+            line-height: 1.2;
+            margin-bottom: 12px;
+        }
+
+        @media (min-width: 820px) {
+            .matrix-main-headline {
+                white-space: nowrap;
+            }
+        }
+
+        .matrix-sub-headline {
+            font-size: clamp(14px, 1.8vw, 16px);
+            color: #94a3b8;
+            font-weight: 500;
+            line-height: 1.5;
+        }
+
+        /* The pristine white comparison card from screenshot */
+        .matrix-table-card {
+            background: #ffffff;
+            border-radius: 28px;
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            box-shadow: 0 25px 60px -15px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(0, 0, 0, 0.05);
+            overflow: hidden;
+            max-width: 1040px;
+            margin: 0 auto;
+            color: #111827;
+            text-align: left;
+        }
+
+        .matrix-scroll-container {
+            width: 100%;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .matrix-table {
+            width: 100%;
+            min-width: 760px;
+            border-collapse: separate;
+            border-spacing: 0;
+        }
+
+        /* Column widths */
+        .matrix-col-cap { width: 34%; }
+        .matrix-col-hero { width: 24%; }
+        .matrix-col-alt1 { width: 21%; }
+        .matrix-col-alt2 { width: 21%; }
+
+        /* Highlighted hero column (STAR CHAIN) */
+        .matrix-hero-cell {
+            background: #f0f7ff;
+            text-align: center;
+        }
+
+        /* Headers */
+        .matrix-th {
+            padding: 34px 22px 22px;
+            vertical-align: bottom;
+            font-weight: 700;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        .matrix-th-cap {
+            font-size: 11px;
+            font-weight: 800;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            color: #6b7280;
+            padding-left: 32px;
+        }
+
+        .matrix-th-hero {
+            background: #f0f7ff;
+            border-top-left-radius: 24px;
+            text-align: center;
+            border-bottom: 1px solid #dbeafe;
+        }
+
+        .matrix-th-alt {
+            text-align: center;
+            color: #374151;
+            font-size: 13.5px;
+            font-weight: 700;
+        }
+
+        /* Hero product logo badge */
+        .matrix-hero-badge {
+            display: inline-flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .matrix-hero-icon {
+            width: 52px;
+            height: 52px;
+            border-radius: 16px;
+            background: linear-gradient(135deg, #0071e3 0%, #38bdf8 100%);
+            box-shadow: 0 10px 25px -4px rgba(0, 113, 227, 0.45);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #ffffff;
+            font-size: 24px;
+        }
+
+        .matrix-hero-title {
+            font-size: 15px;
+            font-weight: 800;
+            color: #0071e3;
+            letter-spacing: -0.01em;
+        }
+
+        /* Alt competitor icons */
+        .matrix-alt-icon-wrap {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .matrix-alt-icon-box {
+            width: 46px;
+            height: 46px;
+            border-radius: 14px;
+            background: #f3f4f6;
+            border: 1px solid #e5e7eb;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #9ca3af;
+            font-size: 20px;
+        }
+
+        .matrix-alt-name {
+            font-size: 13px;
+            font-weight: 700;
+            color: #4b5563;
+        }
+
+        /* Rows and cells */
+        .matrix-tr {
+            transition: background-color 0.15s ease;
+        }
+
+        .matrix-tr:hover {
+            background-color: #fafbfc;
+        }
+
+        .matrix-tr:last-child .matrix-td {
+            border-bottom: none;
+        }
+
+        .matrix-tr:last-child .matrix-hero-cell {
+            border-bottom-left-radius: 0;
+            border-bottom-right-radius: 0;
+        }
+
+        .matrix-td {
+            padding: 19px 20px;
+            border-bottom: 1px solid #f1f3f5;
+            font-size: 14px;
+            color: #4b5563;
+            vertical-align: middle;
+        }
+
+        .matrix-td-cap {
+            font-weight: 700;
+            color: #1f2937;
+            padding-left: 32px;
+            font-size: 14px;
+        }
+
+        .matrix-td-cap small {
+            display: block;
+            font-weight: 500;
+            font-size: 12px;
+            color: #6b7280;
+            margin-top: 2px;
+        }
+
+        .matrix-td-hero {
+            background: #f0f7ff;
+            text-align: center;
+            font-weight: 800;
+            color: #0071e3;
+            font-size: 14.5px;
+            border-bottom-color: #e0f0fe;
+        }
+
+        .matrix-td-alt {
+            text-align: center;
+            font-weight: 600;
+            color: #6b7280;
+            font-size: 13.5px;
+        }
+
+        .matrix-badge-pill {
+            display: inline-block;
+            padding: 3px 10px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 700;
+        }
+
+        .matrix-badge-hero {
+            background: #e0f2fe;
+            color: #0369a1;
+        }
+
+        .matrix-badge-neutral {
+            background: #f3f4f6;
+            color: #4b5563;
+        }
+
+        @media (max-width: 768px) {
+            .matrix-table-card {
+                border-radius: 20px;
+            }
+            .matrix-th-cap, .matrix-td-cap {
+                padding-left: 18px;
+            }
+            .matrix-main-headline {
+                font-size: 1.85rem;
+            }
+        }
+
+        .compare-list {
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+        }
+
+        .compare-list li {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            font-size: 13.5px;
+            line-height: 1.5;
+            color: #cbd5e1;
+        }
+
+        .compare-list li i.bad {
+            color: #ef4444;
+            font-size: 17px;
+            flex-shrink: 0;
+            margin-top: 1px;
+        }
+
+        .compare-list li i.good {
+            color: #e6e6ec;
+            font-size: 17px;
+            flex-shrink: 0;
+            margin-top: 1px;
+        }
+
+        /* 4. DAW & OS Compatibility */
+        .daw-compat-box {
+            background: #0d1017;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 20px;
+            padding: 32px 28px;
+            margin-top: 36px;
+            text-align: center;
+        }
+
+        .daw-badges-row {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .daw-badge-pill {
+            background: #141822;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: #f1f5f9;
+            font-size: 12.5px;
+            font-weight: 700;
+            padding: 8px 16px;
+            border-radius: 9999px;
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+            transition: all 0.2s ease;
+        }
+
+        .daw-badge-pill:hover {
+            border-color: #e6e6ec;
+            color: #e6e6ec;
+            transform: translateY(-2px);
+        }
+
+        .daw-badge-pill i {
+            color: #e6e6ec;
+            font-size: 14px;
+        }
+
+        /* ==================== VIDEO DEMO ==================== */
+        .demo-video-frame {
+            width: 100%;
+            max-width: 960px;
+            margin: 0 auto;
+            border-radius: 18px;
+            overflow: hidden;
+            border: 1px solid rgba(232, 232, 238, 0.25);
+            box-shadow: 0 24px 60px rgba(0, 0, 0, 0.45);
+            background: #000;
+            aspect-ratio: 16 / 9;
+        }
+
+        .demo-video-frame video {
+            width: 100%;
+            height: 100%;
+            display: block;
+            object-fit: cover;
+        }
+
+        /* ==================== RESPONSIVE QUERIES ==================== */
+        @media (max-width: 1024px) {
+            .hero-main-stage {
+                flex-direction: column;
+                text-align: center;
+                padding-top: 90px;
+                gap: 32px;
+            }
+
+            .star-stage-col, .artist-experience-col {
+                max-width: 100%;
+                width: 100%;
+            }
+
+            .star-character-wrapper {
+                max-width: 420px;
+            }
+
+            .effects-detail-card {
+                grid-template-columns: 1fr;
+            }
+
+            .pricing-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .audience-split-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .walkthrough-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 640px) {
+            :root { --promo-h: 58px; }
+
+            .promo-top-bar {
+                flex-wrap: wrap;
+                align-content: center;
+                row-gap: 3px;
+                column-gap: 10px;
+                padding: 6px 10px;
+            }
+
+            .promo-desc {
+                order: -1;
+                flex: 0 0 100%;
+                text-align: center;
+                font-size: 12.5px;
+                letter-spacing: 0.03em;
+            }
+
+            .promo-pill {
+                font-size: 9.5px;
+                padding: 2px 8px;
+            }
+
+            .promo-timer {
+                font-size: 13px;
+            }
+
+            header.tvb-header {
+                top: calc(var(--promo-h) + 8px);
+                left: 14px;
+                right: 14px;
+            }
+
+            .tvb-nav-menu {
+                display: none;
+            }
+
+            .brand-title {
+                font-size: 18px;
+            }
+
+            .btn-get-rack {
+                padding: 7px 14px;
+                font-size: 12px;
+            }
+
+            .hero-main-stage {
+                padding: 74px 12px 20px;
+                gap: 16px;
+            }
+
+            .hero-brand-title {
+                font-size: 24px;
+                letter-spacing: -0.8px;
+            }
+
+            #starAvatar {
+                width: 170px;
+                height: 170px;
+                margin-top: 6px;
+                overflow: hidden;
+            }
+
+            #starAvatar > * {
+                max-width: 100%;
+                max-height: 100%;
+            }
+
+            .star-pedestal-shadow {
+                width: 140px;
+                height: 14px;
+                margin-top: 0;
+            }
+
+            .hero-cta-group {
+                margin-top: 22px;
+            }
+
+            .hero-primary-cta {
+                padding: 12px 26px;
+                font-size: 14px;
+                width: 100%;
+                max-width: 320px;
+            }
+
+            .star-player-panel {
+                padding: 14px;
+                border-radius: 16px;
+                gap: 10px;
+            }
+
+            .player-avatar-thumb {
+                width: 38px;
+                height: 38px;
+            }
+
+            .player-track-info h4 {
+                font-size: 14px;
+            }
+
+            .player-tag-pill {
+                font-size: 10px;
+                padding: 2px 7px;
+            }
+
+            .player-bars-canvas {
+                height: 26px;
+                gap: 2px;
+            }
+
+            .player-circle-play-btn {
+                width: 38px;
+                height: 38px;
+                font-size: 16px;
+            }
+
+            .price-amount {
+                font-size: 38px;
+            }
+
+            .section-headline-lg {
+                font-size: 26px;
+                letter-spacing: -0.6px;
+            }
+
+            .site-container {
+                padding: 50px 16px;
+            }
+        }
+        /* ==================== ORB: mariposa, modelos de IA ==================== */
+        .orb-butterfly { width: 250px; height: 250px; display: block; }
+        .hero-main-stage { justify-content: center; }
+        #starAvatar { filter: drop-shadow(0 18px 30px rgba(0, 0, 0, 0.22)); }
+        .models-head-note { font-size: 13px; color: #1b1b1d; font-weight: 600; margin: 2px 4px 0; }
+        .model-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; width: 100%; }
+        .model-card { background: #0d0e11; border: 1.5px solid rgba(255,255,255,.1); border-radius: 20px; padding: 12px; display: flex; flex-direction: column; gap: 14px; box-shadow: 0 14px 34px rgba(0,0,0,.28); transition: transform .25s cubic-bezier(.16,1,.3,1), border-color .25s; }
+        .model-card:hover { transform: translateY(-4px); border-color: rgba(232,232,238,.5); }
+        .model-cover { position: relative; width: 100%; aspect-ratio: 4 / 3; border-radius: 14px; overflow: hidden; background: #050506; border: 1px solid rgba(255,255,255,.06); }
+        .model-cover img, .model-cover video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: block; }
+        .model-cover video { opacity: 0; transition: opacity .35s; }
+        .model-card:hover .model-cover video { opacity: 1; }
+        .model-cover.empty { display: grid; place-items: center; background: radial-gradient(circle at 50% 40%, #16171b, #050506 70%); }
+        .model-cover.empty span { font-size: 11px; font-weight: 800; letter-spacing: .16em; text-transform: uppercase; color: rgba(255,255,255,.28); }
+        .model-body { display: flex; flex-direction: column; gap: 8px; padding: 0 6px 6px; flex: 1; }
+        .model-tag { align-self: flex-start; font-size: 10px; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; color: #e6e6ec; border: 1px solid rgba(255,255,255,.22); border-radius: 99px; padding: 3px 10px; }
+        .model-name { font-size: 22px; font-weight: 900; letter-spacing: -.4px; color: #fff; }
+        .model-sub { font-size: 13.5px; line-height: 1.6; color: #a1acbd; flex: 1; }
+        .model-btn { margin-top: 6px; display: inline-flex; align-items: center; justify-content: center; gap: 6px; height: 42px; border-radius: 99px; font-size: 13px; font-weight: 800; background: #e6e6ec; color: #07080a; transition: transform .2s, background .2s; }
+        .model-btn:hover { transform: translateY(-2px); background: #fff; }
+        .model-btn.ghost { background: transparent; color: #fff; border: 1px solid rgba(255,255,255,.3); }
+        .model-btn.ghost:hover { background: rgba(255,255,255,.08); }
+        .clyra-showcase { display: grid; grid-template-columns: 1fr 1fr; gap: 28px; align-items: center; }
+        .clyra-showcase .demo-video-frame { aspect-ratio: 3 / 4; max-width: 400px; margin: 0 auto; width: 100%; }
+        .clyra-showcase .astra-frame { aspect-ratio: 9 / 16; max-width: 340px; }
+        .clyra-showcase.flip > div:first-child { order: 2; }
+        .astra-frame { display: grid; place-items: center; background: radial-gradient(circle at 50% 40%, #16171b, #050506 70%); border: 1px solid rgba(255,255,255,.08); }
+        .astra-frame span { font-size: 12px; font-weight: 800; letter-spacing: .18em; text-transform: uppercase; color: rgba(255,255,255,.26); }
+        /* ===== dinamismo: aparición al hacer scroll, línea que conecta los pasos, brillo que sigue al cursor ===== */
+        .reveal { opacity: 0; transform: translateY(26px) scale(.985); transition: opacity .7s cubic-bezier(.16,1,.3,1) var(--d,0s), transform .7s cubic-bezier(.16,1,.3,1) var(--d,0s); }
+        .reveal.in { opacity: 1; transform: none; }
+        .dl-grid { position: relative; }
+        .dl-card { position: relative; overflow: hidden; transition: transform .35s cubic-bezier(.16,1,.3,1), border-color .3s, box-shadow .35s; }
+        .dl-card::before { content: ""; position: absolute; inset: 0; background: radial-gradient(360px circle at var(--mx,50%) var(--my,0%), rgba(255,255,255,.08), transparent 60%); opacity: 0; transition: opacity .3s; pointer-events: none; }
+        .dl-card:hover { transform: translateY(-5px); border-color: rgba(255,255,255,.28); box-shadow: 0 18px 40px -18px rgba(0,0,0,.8); }
+        .dl-card:hover::before { opacity: 1; }
+        .dl-link { position: absolute; z-index: 2; left: calc(50% - 9px); top: 50%; width: 18px; height: 2px; pointer-events: none; display: block; }
+        .dl-link b { position: absolute; left: 0; top: -3px; width: 8px; height: 8px; border-radius: 50%; background: #e6e6ec; box-shadow: 0 0 14px 3px rgba(230,230,236,.5); animation: dlflow 2.4s ease-in-out infinite; }
+        .dl-link::after { content: ""; position: absolute; left: -10px; right: -10px; top: 0; height: 2px; background: repeating-linear-gradient(90deg, rgba(255,255,255,.35) 0 4px, transparent 4px 8px); }
+        @keyframes dlflow { 0% { transform: translateX(-22px); opacity: 0; } 25% { opacity: 1; } 75% { opacity: 1; } 100% { transform: translateX(30px); opacity: 0; } }
+        .dl-btn:not(.disabled) { position: relative; animation: dlpulse 2.6s ease-out infinite; }
+        .dl-btn:not(.disabled) i { animation: dlbounce 1.6s ease-in-out infinite; }
+        @keyframes dlpulse { 0% { box-shadow: 0 0 0 0 rgba(230,230,236,.45); } 70% { box-shadow: 0 0 0 16px rgba(230,230,236,0); } 100% { box-shadow: 0 0 0 0 rgba(230,230,236,0); } }
+        @keyframes dlbounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(3px); } }
+        .dl-btn.disabled { animation: none; }
+        .dl-progress { width: 100%; height: 3px; border-radius: 2px; background: rgba(255,255,255,.08); overflow: hidden; opacity: 0; transition: opacity .3s; }
+        .dl-progress.on { opacity: 1; }
+        .dl-progress i { display: block; height: 100%; width: 0; background: #e6e6ec; }
+        .dl-progress.on i { animation: dlbar 2.2s cubic-bezier(.3,.7,.2,1) forwards; }
+        @keyframes dlbar { to { width: 100%; } }
+        .live-dot { display: inline-block; width: 8px; height: 8px; margin-right: 8px; border-radius: 50%; background: #e6e6ec; animation: dlpulse 1.8s ease-out infinite; vertical-align: middle; }
+        .lic-key-row code { transition: box-shadow .5s, border-color .5s; }
+        .lic-key-row code.fresh { border-color: rgba(255,255,255,.6); box-shadow: 0 0 0 4px rgba(255,255,255,.08), 0 0 28px rgba(255,255,255,.18); }
+        .lic-copy { position: relative; overflow: hidden; transition: transform .2s, background .2s; }
+        .lic-copy:active { transform: scale(.94); }
+        .lic-copy.ok { background: #fff; }
+        @media (max-width: 760px) { .dl-link { display: none; } }
+        @media (prefers-reduced-motion: reduce) { .reveal { opacity: 1; transform: none; transition: none; } .dl-btn, .dl-link b, .live-dot { animation: none !important; } }
+        .btn-buy-tier { white-space: normal; text-align: center; }
+        .dl-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 18px; margin-top: 26px; }
+        .dl-card { background: #12151d; border: 1px solid rgba(255,255,255,.1); border-radius: 18px; padding: 24px; display: flex; flex-direction: column; gap: 12px; align-items: flex-start; }
+        .dl-card h3 { font-size: 20px; font-weight: 800; color: #fff; }
+        .dl-card p { font-size: 14px; line-height: 1.65; color: #a1acbd; }
+        .dl-btn { display: inline-flex; width: auto; gap: 8px; }
+        .dl-btn.disabled { opacity: .45; pointer-events: none; }
+        .dl-note { font-size: 12px; color: #7d8799; line-height: 1.55; }
+        .lic-key-row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin: 8px 0; }
+        .lic-key-row code { font-family: 'JetBrains Mono', monospace; font-size: 15px; letter-spacing: .04em; background: #07080a; color: #e6e6ec; border: 1px solid rgba(255,255,255,.14); border-radius: 12px; padding: 12px 14px; word-break: break-all; }
+        .lic-copy { height: 44px; padding: 0 18px; border-radius: 99px; background: #e6e6ec; color: #07080a; font-weight: 800; font-size: 13px; display: inline-flex; align-items: center; gap: 6px; }
+        .lic-copy:hover { background: #fff; }
+        @media (max-width: 760px) { .dl-grid { grid-template-columns: 1fr; } }
+        @media (max-width: 1024px) { .model-grid { max-width: 640px; margin: 0 auto; } .clyra-showcase { grid-template-columns: 1fr; } .clyra-showcase.flip > div:first-child { order: 0; } }
+        @media (max-width: 560px) { .model-grid { grid-template-columns: 1fr; } }
+
+        /* ==================== SYNORA: tinta negra, grano y una onda hecha de trazos finos ==================== */
+        body { background: #050505; color: #ecebe6; }
+        #hero-runway { background: #050505; }
+        #synWave { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 0; filter: blur(2.2px); opacity: .85; }
+        .syn-grain { position: absolute; inset: 0; z-index: 1; pointer-events: none; opacity: .10; mix-blend-mode: screen;
+            background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='220' height='220'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 .9 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>"); }
+        #hero-runway::after { content: ''; position: absolute; inset: 0; z-index: 2; pointer-events: none;
+            background: radial-gradient(ellipse 80% 62% at 50% 62%, rgba(5,5,5,0) 0%, rgba(5,5,5,.5) 70%, #050505 100%); }
+        header.tvb-header { z-index: 40; }
+        header.tvb-header .brand-title, .tvb-nav-menu a { color: #ecebe6 !important; }
+        .tvb-nav-menu a { opacity: .7; } .tvb-nav-menu a:hover { opacity: 1; }
+        .btn-get-rack { background: #ecebe6 !important; color: #050505 !important; border-color: #ecebe6 !important; }
+        .hero-main-stage.syn-center { justify-content: center; text-align: center; position: relative; z-index: 10; padding-top: clamp(90px, 14vh, 150px); }
+        .syn-hero-col { display: flex; flex-direction: column; align-items: center; max-width: 820px; }
+        .syn-hero-col .hero-kicker-tag { color: #8a8a86; letter-spacing: .5em; font-weight: 400; margin-bottom: 18px; }
+        .syn-word { font-size: clamp(44px, 10vw, 118px); font-weight: 200; letter-spacing: .5em; margin-right: -.5em; color: #ecebe6; line-height: 1; text-shadow: 0 0 46px rgba(236,235,230,.38); }
+        .syn-sub { margin: 24px 0 8px; font-size: clamp(15px, 1.9vw, 19px); line-height: 1.8; font-weight: 300; color: #a9a9a4; letter-spacing: .04em; max-width: 620px; }
+        .syn-hero-col .hero-cta-group { margin-top: 26px; }
+        .hero-price-main { color: #ecebe6; } .hero-cta-specs { color: #77776f; }
+        .syn-hero-col .hero-primary-cta { background: #ecebe6; color: #050505; }
+        #hero-runway .hero-price-pill { background: rgba(236,235,230,.08); border-color: rgba(236,235,230,.2); }
+        /* piano roll animado */
+        .syn-roll-wrap { position: relative; border: 1px solid rgba(236,235,230,.12); border-radius: 18px; background: linear-gradient(180deg, rgba(236,235,230,.05), rgba(5,5,5,.7)); overflow: hidden; margin-top: 8px; }
+        #synRoll { width: 100%; height: 260px; display: block; }
+        .syn-roll-bar { display: flex; flex-wrap: wrap; gap: 8px; padding: 12px 16px; border-top: 1px solid rgba(236,235,230,.1); }
+        .syn-chip { padding: 6px 14px; border: 1px solid rgba(236,235,230,.16); border-radius: 99px; font-size: 12px; letter-spacing: .08em; color: #a9a9a4; background: transparent; transition: .25s; }
+        .syn-chip:hover, .syn-chip.on { color: #050505; background: #ecebe6; border-color: #ecebe6; }
+        .syn-src-note { padding: 0 16px 14px; font-size: 12.5px; color: #77776f; }
+        .syn-feature-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; margin-top: 26px; }
+        .syn-feature { padding: 26px 24px; border: 1px solid rgba(236,235,230,.12); border-radius: 18px; background: rgba(236,235,230,.03); transition: .3s; }
+        .syn-feature:hover { border-color: rgba(236,235,230,.35); background: rgba(236,235,230,.06); transform: translateY(-3px); }
+        .syn-feature i { font-size: 22px; color: #ecebe6; display: block; margin-bottom: 14px; }
+        .syn-feature h3 { font-size: 18px; font-weight: 600; margin: 0 0 8px; color: #ecebe6; }
+        .syn-feature p { margin: 0; font-size: 14.5px; line-height: 1.7; color: #94948f; }
+        .syn-four { grid-template-columns: repeat(4, 1fr); }
+        @media (max-width: 1024px) { .syn-four { grid-template-columns: repeat(2, 1fr); } }
+        @media (max-width: 860px) { .syn-feature-grid { grid-template-columns: 1fr; } .syn-four { grid-template-columns: 1fr; } }
+    </style>
+</head>
+
+<body>
+
+    <section id="hero-runway">
+        <canvas id="synWave" aria-hidden="true"></canvas>
+        <div class="syn-grain" aria-hidden="true"></div>
+        <header class="tvb-header">
+            <a href="/plugins/synora" class="brand-title">SYNORA</a>
+            <nav class="tvb-nav-menu">
+                <a href="#en-accion">En acción</a>
+                <a href="#funciones">Funciones</a>
+                <a href="#sonido">Sonido</a>
+                <a href="#descargar">Descargar</a>
+                <a href="#precios">Precios</a>
+                <a href="#faq">FAQ</a>
+            </nav>
+            <a href="/plugins/checkout.html?plugin=synora&tier=full" class="btn-get-rack">Obtener SYNORA ↗</a>
+        </header>
+
+        <div class="hero-main-stage syn-center">
+            <div class="syn-hero-col">
+                <span class="hero-kicker-tag">IMAGEN Y AUDIO A MIDI</span>
+                <h1 class="syn-word">SYNORA</h1>
+                <p class="syn-sub">Suelta una captura, un loop o una idea. SYNORA la convierte en notas y las deja listas para tu piano roll.</p>
+                <div class="hero-cta-group">
+                    <div class="hero-price-pill"><span class="hero-price-main" id="synPriceUsd">$5 USD</span><span class="hero-price-discount" style="background:rgba(255,255,255,.12);color:#e6e6ec" id="synPricePen">S/ 15 · por vida · precio fijo</span></div>
+                    <a href="/plugins/checkout.html?plugin=synora&tier=full" class="hero-primary-cta"><span>Obtener SYNORA</span><i class="bi bi-arrow-right-short" style="font-size: 20px;"></i></a>
+                    <span class="hero-cta-specs">VST3 · WINDOWS · DESCARGA INSTANTÁNEA</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <main id="rest-of-site">
+
+        <!-- Qué hace, en vivo -->
+        <section class="site-container" id="en-accion">
+            <span class="section-kicker">MÍRALO EN ACCIÓN</span>
+            <h2 class="section-headline-lg">De una idea a las notas, sin dibujarlas a mano.</h2>
+            <p style="color: #94a3b8; font-size: 15px; max-width: 680px; margin-bottom: 22px; line-height: 1.7;">
+                Elige de dónde viene la idea y mira cómo aparecen las notas. En el plugin cada resultado queda en una tarjeta con su piano roll, lo escuchas con tu sonido y lo arrastras a tu DAW.
+            </p>
+            <div class="syn-roll-wrap">
+                <canvas id="synRoll"></canvas>
+                <div class="syn-roll-bar" id="synRollBar">
+                    <button type="button" class="syn-chip on" data-src="gen">Melodía triste · La menor · 140 BPM</button>
+                    <button type="button" class="syn-chip" data-src="img">Captura de piano roll</button>
+                    <button type="button" class="syn-chip" data-src="loop">Loop de audio</button>
+                </div>
+                <div class="syn-src-note" id="synRollNote">Demostración animada de cómo se ve una tarjeta de SYNORA: las notas son de ejemplo.</div>
+            </div>
+        </section>
+
+        <section class="site-container" id="funciones">
+            <span class="section-kicker">TRES FUNCIONES, UN PLUGIN</span>
+            <h2 class="section-headline-lg">Convierte, crea y llévalo a tu piano roll.</h2>
+            <div class="syn-feature-grid">
+                <div class="syn-feature"><i class="bi bi-image"></i><h3>Imagen a MIDI</h3><p>Pega o suelta una captura de un piano roll (png o jpg) y SYNORA lee las notas: tono, inicio y duración, con tonalidad y compases detectados.</p></div>
+                <div class="syn-feature"><i class="bi bi-soundwave"></i><h3>Loop o audio a MIDI</h3><p>Arrastra un loop (wav, mp3, flac, ogg, m4a) y un modelo de transcripción en tu PC lo convierte en notas. Sin subir tu audio a ningún servidor.</p></div>
+                <div class="syn-feature"><i class="bi bi-music-note-beamed"></i><h3>Melodías, acordes y bajo</h3><p>Pide “una melodía triste en La menor, trap a 140” o responde unas preguntas rápidas. Cambia tonalidad, tempo, compases y pide otra variación.</p></div>
+            </div>
+        </section>
+
+        <section class="site-container" id="sonido">
+            <span class="section-kicker">SUENA DESDE EL PRIMER MINUTO</span>
+            <h2 class="section-headline-lg">Escucha lo que creas antes de llevártelo.</h2>
+            <div class="syn-feature-grid syn-four">
+                <div class="syn-feature"><i class="bi bi-piano"></i><h3>Teclas suaves</h3><p>El sonido por defecto: un Rhodes tranquilo, ideal para probar melodías y acordes.</p></div>
+                <div class="syn-feature"><i class="bi bi-plus-circle-dotted"></i><h3>Tu one-shot</h3><p>Suelta un one-shot propio y toca con él. Se afina a cada nota desde la tonalidad original que elijas.</p></div>
+                <div class="syn-feature"><i class="bi bi-sliders"></i><h3>Efectos básicos</h3><p>Reverb, delay, tono y volumen para hacerte una idea de cómo va a sonar.</p></div>
+                <div class="syn-feature"><i class="bi bi-box-arrow-in-down-right"></i><h3>Arrastra a tu piano roll</h3><p>Mantén pulsado “Arrastra al piano roll” y suéltalo en tu DAW. También puedes guardar el .mid.</p></div>
+            </div>
+        </section>
+
+        <!-- Descargar SYNORA + licencia gratis -->
+        <section class="site-container reveal-group" id="descargar">
+            <span class="section-kicker">DESCARGAR SYNORA</span>
+            <h2 class="section-headline-lg">Descárgalo y pruébalo 3 días gratis.</h2>
+            <p style="color: #94a3b8; font-size: 15px; max-width: 680px; line-height: 1.7;">
+                Descarga el instalador, copia tu licencia gratis de abajo y pégala en SYNORA. Los 3 días empiezan al activarla.
+            </p>
+            <div class="dl-grid"><i class="dl-link" aria-hidden="true"><b></b></i>
+                <div class="dl-card reveal" style="--d:0s">
+                    <span class="step-num-pill">PASO 01</span>
+                    <h3>Descarga SYNORA</h3>
+                    <p>Instalador para Windows (VST3 de 64 bits). Ábrelo y sigue los pasos; el plugin queda en la carpeta VST3.</p>
+                    <a id="dlBtn" class="hero-primary-cta dl-btn" href="#" rel="noopener"><i class="bi bi-download"></i><span>Descargar SYNORA</span></a>
+                    <small id="dlNote" class="dl-note">SYNORA_0.1.0_Setup.exe · se descarga desde Google Drive.</small>
+                    <div class="dl-progress" id="dlProg" aria-hidden="true"><i></i></div>
+                </div>
+                <div class="dl-card reveal" id="licCard" style="--d:.18s">
+                    <span class="step-num-pill">PASO 02</span>
+                    <h3>Tu licencia gratis</h3>
+                    <div id="licWall">
+                        <p>Inicia sesión en OFFSZN y se genera tu licencia de prueba.</p>
+                        <a id="licLogin" class="hero-primary-cta dl-btn" href="/pages/login.html?redirect=/plugins/synora"><i class="bi bi-person-circle"></i><span>Iniciar sesión</span></a>
+                    </div>
+                    <div id="licReady" style="display:none">
+                        <p><span class="live-dot"></span>Licencia lista. Cópiala y pégala en SYNORA, en la pantalla de activación.</p>
+                        <div class="lic-key-row"><code id="licKey">Generando…</code><button type="button" id="licCopy" class="lic-copy"><i class="bi bi-clipboard"></i> Copiar</button></div>
+                        <small class="dl-note">Una prueba por cuenta y por equipo. Los 3 días empiezan al activarla en SYNORA.</small>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="site-container">
+            <span class="section-kicker">CÓMO FUNCIONA</span>
+            <h2 class="section-headline-lg">Tres pasos hasta tu piano roll.</h2>
+            <div class="walkthrough-grid">
+                <div class="walkthrough-step-card"><span class="step-num-pill">PASO 01</span><h3>Abre SYNORA en tu DAW</h3><p>Carga el VST3 como instrumento en una pista. Su ventana guarda tus tarjetas aunque la cierres.</p></div>
+                <div class="walkthrough-step-card"><span class="step-num-pill">PASO 02</span><h3>Describe o suelta tu idea</h3><p>Escribe qué quieres o suelta una captura, un loop o un .mid. Ajusta tonalidad, tempo y compases.</p></div>
+                <div class="walkthrough-step-card"><span class="step-num-pill">PASO 03</span><h3>Arrastra el MIDI</h3><p>Escúchalo con tu sonido y arrástralo al piano roll o a la playlist de tu DAW.</p></div>
+            </div>
+        </section>
+
+        <section class="site-container pricing-section" id="precios">
+            <div style="text-align: center; max-width: 680px; margin: 0 auto;">
+                <span class="section-kicker">ACCESO</span>
+                <h2 class="section-headline-lg">Pruébalo 3 días o llévate la licencia de por vida.</h2>
+                <p style="color: #94a3b8; font-size: 15px;" id="synPriceLine">Un solo pago: $5 USD o S/ 15, precio fijo. Descarga instantánea tras el pago y tu clave de licencia por correo.</p>
+            </div>
+            <div class="pricing-grid">
+                <div class="pricing-card">
+                    <div>
+                        <h3 class="pricing-title">Prueba de 3 días</h3>
+                        <p class="pricing-subtitle">Para conocer SYNORA antes de comprar.</p>
+                        <div class="price-figure-row"><span class="price-amount" style="font-size:2.4rem">Gratis</span></div>
+                        <div class="pricing-savings-note">Una prueba por equipo</div>
+                        <ul class="pricing-perks-list">
+                            <li><i class="bi bi-check2"></i> <span>Imagen, audio y melodías a MIDI</span></li>
+                            <li><i class="bi bi-check2"></i> <span>Teclas suaves, one-shot y efectos básicos</span></li>
+                            <li><i class="bi bi-check2"></i> <span>Arrastrar el MIDI a tu DAW</span></li>
+                        </ul>
+                    </div>
+                    <span class="btn-buy-tier secondary" style="cursor:default">Se activa dentro de SYNORA al abrirlo</span>
+                </div>
+                <div class="pricing-card featured">
+                    <span class="pricing-popular-badge">POR VIDA</span>
+                    <div>
+                        <h3 class="pricing-title">Licencia de por vida</h3>
+                        <p class="pricing-subtitle">Pago único. Todo SYNORA, sin suscripción.</p>
+                        <div class="price-figure-row" style="display:flex;align-items:baseline;justify-content:center;gap:10px;margin-bottom:12px"><span class="price-currency" style="color:#e6e6ec;font-size:2rem">$</span><span class="price-amount" id="synPriceBig" style="color:#e6e6ec;font-size:3.4rem">5</span><span style="color:#94a3b8">USD</span></div>
+                        <div class="pricing-savings-note" id="synPriceNote">En soles: S/ 15 · precio fijo de por vida</div>
+                        <ul class="pricing-perks-list">
+                            <li><i class="bi bi-check2"></i> <span>Todo lo de la prueba, sin límite de tiempo</span></li>
+                            <li><i class="bi bi-check2"></i> <span>Actualizaciones futuras</span></li>
+                            <li><i class="bi bi-check2"></i> <span>Hasta 3 equipos</span></li>
+                            <li><i class="bi bi-check2"></i> <span>Clave de licencia y descarga al correo</span></li>
+                        </ul>
+                    </div>
+                    <a href="/plugins/checkout.html?plugin=synora&tier=full" class="btn-buy-tier primary">Obtener licencia de por vida <i class="bi bi-arrow-right"></i></a>
+                </div>
+            </div>
+            <div class="pricing-guarantee-footer">
+                <span><i class="bi bi-shield-check"></i> Licencia oficial permanente</span>
+                <span><i class="bi bi-lightning-charge-fill"></i> Descarga instantánea tras el pago</span>
+                <span><i class="bi bi-credit-card-2-front"></i> PayPal, tarjeta, Yape</span>
+            </div>
+        </section>
+
+        <section class="site-container" id="faq">
+            <div style="text-align: center; max-width: 680px; margin: 0 auto;">
+                <span class="section-kicker">PREGUNTAS FRECUENTES</span>
+                <h2 class="section-headline-lg">Resolvemos tus dudas.</h2>
+            </div>
+            <div class="faq-accordion-list">
+                <div class="faq-card is-open">
+                    <button type="button" class="faq-question-btn" onclick="toggleFaqCard(this)"><span>¿Cómo paso el MIDI a mi piano roll?</span><i class="bi bi-chevron-down"></i></button>
+                    <div class="faq-answer">Cada resultado tiene un botón “Arrastra al piano roll”: lo mantienes pulsado y lo sueltas en el piano roll o la playlist de tu DAW, que importa el archivo .mid. También puedes guardar el .mid y arrastrarlo desde la carpeta.</div>
+                </div>
+                <div class="faq-card">
+                    <button type="button" class="faq-question-btn" onclick="toggleFaqCard(this)"><span>¿En qué DAWs funciona?</span><i class="bi bi-chevron-down"></i></button>
+                    <div class="faq-answer">En cualquier DAW de Windows que cargue plugins VST3 de 64 bits. Por ahora no hay versión para macOS.</div>
+                </div>
+                <div class="faq-card">
+                    <button type="button" class="faq-question-btn" onclick="toggleFaqCard(this)"><span>¿El audio a MIDI sube mi audio a internet?</span><i class="bi bi-chevron-down"></i></button>
+                    <div class="faq-answer">No. La transcripción corre en tu PC con un modelo local. Funciona mejor con melodías y acordes limpios que con mezclas completas.</div>
+                </div>
+                <div class="faq-card">
+                    <button type="button" class="faq-question-btn" onclick="toggleFaqCard(this)"><span>¿Necesito internet?</span><i class="bi bi-chevron-down"></i></button>
+                    <div class="faq-answer">Para activar la licencia sí. Después puedes trabajar sin conexión.</div>
+                </div>
+                <div class="faq-card">
+                    <button type="button" class="faq-question-btn" onclick="toggleFaqCard(this)"><span>¿Cómo recibo mi licencia?</span><i class="bi bi-chevron-down"></i></button>
+                    <div class="faq-answer">La entrega es digital e inmediata: tras el pago recibes tu clave y el enlace de descarga. Por la naturaleza del software con entrega inmediata de clave no hay reembolsos tras emitirla, pero tienes soporte para cualquier duda de instalación.</div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <footer class="site-footer">
+        <div class="footer-inner">
+            <div class="footer-brand"><span>SYNORA®</span><span style="font-size: 13px; font-weight: 500; color: #64748b;">por SVNDVLPHON &amp; OFFSZN</span></div>
+            <div class="footer-links">
+                <a href="#hero-runway">Inicio</a><a href="#funciones">Funciones</a><a href="#precios">Precios</a><a href="/legal/terminos.html">Términos</a>
+            </div>
+            <p style="margin: 0;">&copy; 2026 OFFSZN. Todos los derechos reservados.</p>
+        </div>
+    </footer>
+
+    <script>
+        function toggleFaqCard(btn) { const c = btn.closest('.faq-card'); if (c) c.classList.toggle('is-open'); }
+
+        // Precio de la landing (provisional hasta definirlo): se cambia aquí y se refleja en toda la página
+        const SYNORA_PRICE = { usd: 5, pen: 15 };
+        (function () {
+            const set = (id, t) => { const e = document.getElementById(id); if (e) e.textContent = t; };
+            set('synPriceUsd', '$' + SYNORA_PRICE.usd + ' USD'); set('synPricePen', 'S/ ' + SYNORA_PRICE.pen + ' · por vida · precio fijo');
+            set('synPriceBig', String(SYNORA_PRICE.usd)); set('synPriceNote', 'En soles: S/ ' + SYNORA_PRICE.pen + ' · precio fijo de por vida');
+            set('synPriceLine', 'Un solo pago: $' + SYNORA_PRICE.usd + ' USD o S/ ' + SYNORA_PRICE.pen + ', precio fijo. Descarga instantánea tras el pago y tu clave de licencia por correo.');
+        })();
+
+        // Onda de portada: trazos verticales finos (tinta sobre negro) con destellos blancos, difuminada
+        (function () {
+            const cv = document.getElementById('synWave'); if (!cv) return;
+            const g = cv.getContext('2d'), hero = document.getElementById('hero-runway'), N = 900, seed = new Float32Array(N * 8);
+            for (let i = 0; i < seed.length; i++) seed[i] = Math.random();
+            let W = 0, H = 0, dpr = 1, raf = 0, on = true; const t0 = performance.now();
+            const resize = () => { dpr = Math.min(2, window.devicePixelRatio || 1); W = hero.clientWidth; H = hero.clientHeight; cv.width = W * dpr; cv.height = H * dpr; g.setTransform(dpr, 0, 0, dpr, 0, 0); g.fillStyle = '#050505'; g.fillRect(0, 0, W, H); };
+            window.addEventListener('resize', resize); resize();
+            const env = (u, t) => { const a = .55 * Math.sin(u * 6.1 + t * .35) + .32 * Math.sin(u * 13.7 - t * .5 + 1.3) + .18 * Math.sin(u * 27 + t * .9 + 2.1); return Math.abs(a) * (.55 + .45 * Math.sin(u * 3.3 - t * .22)); };
+            function frame(now) {
+                if (!on) return; const t = (now - t0) / 1000;
+                g.fillStyle = 'rgba(5,5,5,.3)'; g.fillRect(0, 0, W, H);
+                const mid = H * .74, amp = H * .2; g.lineCap = 'round';
+                for (let i = 0; i < N; i++) {
+                    const u = i / N, x = u * W, s = i * 8, e = env(u, t), h = e * amp, jit = seed[s] * .5 + .75;
+                    const top = h * jit * (.55 + .45 * seed[s + 1]), bot = h * jit * (.75 + .5 * seed[s + 2]), a = (.07 + .22 * seed[s + 3]) * (.6 + e);
+                    g.strokeStyle = 'rgba(236,235,230,' + Math.min(.3, a * .8) + ')'; g.lineWidth = .6 + seed[s + 4] * .7;
+                    g.beginPath(); g.moveTo(x, mid - top); g.lineTo(x, mid + bot); g.stroke();
+                    if (seed[s + 5] > .985) {
+                        const sp = amp * (.7 + 1.3 * seed[s + 6]) * (.4 + e), f = .35 + .65 * (.5 + .5 * Math.sin(t * 1.4 + i));
+                        g.strokeStyle = 'rgba(255,255,250,' + (.28 * f) + ')'; g.lineWidth = 1.4; g.shadowColor = 'rgba(255,255,250,.9)'; g.shadowBlur = 18 * f;
+                        g.beginPath(); g.moveTo(x, mid - sp * .55); g.lineTo(x, mid + sp * .45); g.stroke(); g.shadowBlur = 0;
+                    }
+                }
+                raf = requestAnimationFrame(frame);
+            }
+            raf = requestAnimationFrame(frame);
+            if ('IntersectionObserver' in window) new IntersectionObserver(es => { const v = es[0].isIntersecting; if (v && !on) { on = true; raf = requestAnimationFrame(frame); } else if (!v) { on = false; cancelAnimationFrame(raf); } }, { threshold: 0 }).observe(hero);
+        })();
+
+        // Piano roll de demostración: las notas aparecen de izquierda a derecha y el cabezal recorre el compás
+        (function () {
+            const cv = document.getElementById('synRoll'); if (!cv) return;
+            const g = cv.getContext('2d'), bar = document.getElementById('synRollBar'), note = document.getElementById('synRollNote');
+            const SETS = {
+                gen: { txt: 'Demostración animada de cómo se ve una tarjeta de SYNORA: las notas son de ejemplo.', len: 16, n: [[0, 69, 1.5], [1.5, 67, .5], [2, 64, 1], [3, 67, 1], [4, 69, 1.5], [5.5, 72, .5], [6, 71, 1], [7, 67, 1], [8, 64, 2], [10, 67, 1], [11, 69, 1], [12, 72, 1.5], [13.5, 71, .5], [14, 69, 2]] },
+                img: { txt: 'Una captura de piano roll leída como notas: tono, inicio y duración (notas de ejemplo).', len: 16, n: [[0, 60, 2], [2, 63, 1], [3, 65, 1], [4, 67, 2], [6, 70, 1], [7, 68, 1], [8, 65, 2], [10, 63, 1], [11, 60, 1], [12, 62, 2], [14, 63, 2]] },
+                loop: { txt: 'Un loop de audio transcrito a notas por el modelo local (notas de ejemplo).', len: 16, n: [[0, 57, .5], [.5, 60, .5], [1, 64, .5], [1.5, 60, .5], [2, 57, .5], [2.5, 60, .5], [3, 64, .5], [3.5, 67, .5], [4, 55, .5], [4.5, 59, .5], [5, 62, .5], [5.5, 59, .5], [6, 55, .5], [6.5, 59, .5], [7, 62, .5], [7.5, 67, .5], [8, 53, .5], [8.5, 57, .5], [9, 60, .5], [9.5, 57, .5], [10, 53, .5], [10.5, 57, .5], [11, 60, .5], [11.5, 64, .5], [12, 52, 1], [13, 55, 1], [14, 59, 2]] }
+            };
+            let cur = 'gen', t0 = performance.now(), W = 0, H = 0;
+            const resize = () => { const d = Math.min(2, window.devicePixelRatio || 1), r = cv.getBoundingClientRect(); W = r.width; H = r.height; cv.width = W * d; cv.height = H * d; g.setTransform(d, 0, 0, d, 0, 0); };
+            window.addEventListener('resize', resize); resize();
+            bar.addEventListener('click', e => { const b = e.target.closest('.syn-chip'); if (!b) return; cur = b.dataset.src; t0 = performance.now(); bar.querySelectorAll('.syn-chip').forEach(x => x.classList.toggle('on', x === b)); note.textContent = SETS[cur].txt; });
+            (function draw(now) {
+                const S = SETS[cur], T = (now - t0) / 1000, loopT = 9, k = Math.min(1, T / 3.4), head = ((T % loopT) / loopT) * S.len;
+                g.clearRect(0, 0, W, H);
+                const pad = 46, lo = Math.min(...S.n.map(n => n[1])) - 2, hi = Math.max(...S.n.map(n => n[1])) + 2, rows = hi - lo + 1, rh = (H - 20) / rows, x = b => pad + b / S.len * (W - pad - 14);
+                for (let b = 0; b <= S.len; b++) { g.fillStyle = b % 4 === 0 ? 'rgba(236,235,230,.12)' : 'rgba(236,235,230,.05)'; g.fillRect(Math.round(x(b)), 6, 1, H - 12); }
+                for (let r = 0; r < rows; r++) { if ([1, 3, 6, 8, 10].includes((lo + r) % 12)) { g.fillStyle = 'rgba(236,235,230,.035)'; g.fillRect(pad, 10 + (rows - 1 - r) * rh, W - pad - 14, rh); } }
+                S.n.forEach(n => {
+                    if (n[0] > S.len * k) return; const y = 10 + (hi - n[1]) * rh, w = Math.max(3, x(n[0] + n[2]) - x(n[0]) - 2), on = head >= n[0] && head < n[0] + n[2];
+                    g.fillStyle = on ? '#ffffff' : 'rgba(236,235,230,.72)'; if (on) { g.shadowColor = 'rgba(255,255,255,.8)'; g.shadowBlur = 12; }
+                    g.beginPath(); g.roundRect ? g.roundRect(x(n[0]), y, w, Math.max(4, rh - 2), 3) : g.rect(x(n[0]), y, w, Math.max(4, rh - 2)); g.fill(); g.shadowBlur = 0;
+                });
+                g.fillStyle = 'rgba(255,255,255,.7)'; g.fillRect(Math.round(x(head)), 4, 1.5, H - 8);
+                requestAnimationFrame(draw);
+            })(performance.now());
+        })();
+
+        // ───── animaciones de la página ─────
+        (function () {
+            const io = 'IntersectionObserver' in window ? new IntersectionObserver((es) => es.forEach(e => { if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); } }), { threshold: .18 }) : null;
+            document.querySelectorAll('.reveal').forEach(el => io ? io.observe(el) : el.classList.add('in'));
+            document.querySelectorAll('.dl-card').forEach(c => c.addEventListener('pointermove', e => { const r = c.getBoundingClientRect(); c.style.setProperty('--mx', (e.clientX - r.left) + 'px'); c.style.setProperty('--my', (e.clientY - r.top) + 'px'); }));
+            const dl = document.getElementById('dlBtn'), prog = document.getElementById('dlProg');
+            dl.addEventListener('click', () => { if (dl.classList.contains('disabled')) return; prog.classList.remove('on'); void prog.offsetWidth; prog.classList.add('on'); });
+        })();
+
+        // ───── Descargar SYNORA y licencia gratis (mismo flujo que las demás páginas de plugins) ─────
+        // Enlace de descarga directa del instalador (Google Drive). Vacío = botón desactivado hasta subir el instalador.
+        const SYNORA_DOWNLOAD_URL = '';
+        (function () {
+            const dl = document.getElementById('dlBtn');
+            if (SYNORA_DOWNLOAD_URL) { dl.href = SYNORA_DOWNLOAD_URL; dl.target = '_blank'; }
+            else { dl.classList.add('disabled'); dl.querySelector('span').textContent = 'Descarga próximamente'; document.getElementById('dlNote').textContent = 'El enlace de descarga se habilita muy pronto.'; }
+            const wall = document.getElementById('licWall'), ready = document.getElementById('licReady'), keyEl = document.getElementById('licKey');
+            document.getElementById('licCopy').addEventListener('click', () => {
+                const t = keyEl.textContent; if (!t || /^Generando|^No se/.test(t)) return;
+                if (navigator.clipboard) navigator.clipboard.writeText(t).catch(() => {});
+                const b = document.getElementById('licCopy'); b.classList.add('ok'); b.innerHTML = '<i class="bi bi-check2"></i> Copiada'; setTimeout(() => { b.classList.remove('ok'); b.innerHTML = '<i class="bi bi-clipboard"></i> Copiar'; }, 2000);
+            });
+            function revealKey(key) {
+                const chars = 'ABCDEF0123456789', t0 = performance.now(), dur = 1100; keyEl.classList.add('fresh');
+                (function step(now) {
+                    const k = Math.min(1, (now - t0) / dur), n = Math.floor(k * key.length);
+                    keyEl.textContent = key.split('').map((c, i) => i < n || c === '-' ? c : chars[Math.floor(Math.random() * chars.length)]).join('');
+                    if (k < 1) requestAnimationFrame(step); else { keyEl.textContent = key; setTimeout(() => keyEl.classList.remove('fresh'), 1600); }
+                })(t0);
+            }
+            async function load() {
+                let tries = 0; while (!window.supabaseClient && tries < 20) { await new Promise(r => setTimeout(r, 200)); tries++; }
+                if (!window.supabaseClient) return;
+                const { data: { session } } = await window.supabaseClient.auth.getSession();
+                if (!session) return;
+                wall.style.display = 'none'; ready.style.display = 'block'; keyEl.textContent = 'Generando…';
+                try {
+                    const res = await fetch('/api/plugin/generate-trial-web', { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + session.access_token }, body: JSON.stringify({ plugin_name: 'SYNORA' }) });
+                    const d = await res.json();
+                    if (d && d.success && d.serial_key) revealKey(d.serial_key); else keyEl.textContent = 'No se pudo generar tu licencia. Inténtalo de nuevo.';
+                } catch (e) { keyEl.textContent = 'No se pudo conectar con el servidor. Inténtalo de nuevo.'; }
+            }
+            document.addEventListener('DOMContentLoaded', load);
+        })();
+    </script>
+</body>
+</html>
