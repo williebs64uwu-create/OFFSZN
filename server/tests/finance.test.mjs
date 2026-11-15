@@ -108,7 +108,7 @@ test('pesos argentinos: cuentan solo cuando llegan los soles; el depósito se re
 });
 
 // ─── Bolsillos, retiro de PayPal y servicios ───────────────────────────────────────────────────────────────────
-import { paypalPocket, pockets, kindOf, byDay, liveBalances, goalProgress, withdrawalPen, estimatePayPalFee, monthNet, cuadre, goalWindow } from '../src/shared/store/finance.js';
+import { paypalPocket, pockets, kindOf, byDay, liveBalances, goalProgress, withdrawalPen, estimatePayPalFee, currencyMismatch, monthNet, cuadre, goalWindow } from '../src/shared/store/finance.js';
 const ppRow = (net, fee = 0) => ({ status: 'confirmed', method: 'paypal', currency: 'USD', gross: net + fee, fee, net });
 test('PayPal por debajo de 120 US$: solo se convierte a 3,3, sin costo de retiro', () => {
     const p = paypalPocket([ppRow(46.05, 2.95), ppRow(15.78, 1.22)]);
@@ -304,4 +304,24 @@ test('Saldo inicial de PayPal: cuenta en el saldo (0,55 US$ que ya tenías) pero
     assert.equal(sin.balanceUsd, 100); assert.equal(con.balanceUsd, 100.55); assert.equal(con.openingUsd, 0.55);
     assert.equal(con.grossUsd, sin.grossUsd);                         // las ventas no cambian
     assert.equal(paypalPocket(rows, undefined, [{ usd: 100.55 }], 0.55).balanceUsd, 0);
+});
+
+// ─── Reglas: cada método cobra en su moneda; clasificación de productos ───────────────────────────────────────
+test('Yape en dólares NO se puede anotar (el caso de S/ 140 que salía como US$ 140)', () => {
+    const bad = normalizeManualIncome({ serial: 'STAR-FULL-X', currency: 'USD', method: 'yape', amount: 140, product: 'STAR CHAIN' });
+    assert.equal(bad.ok, false); assert.match(bad.error, /Yape se cobra en soles/);
+    assert.equal(normalizeManualIncome({ registerOnly: true, product: 'X', currency: 'PEN', method: 'paypal', amount: 10 }).ok, false);   // PayPal en soles
+    assert.equal(normalizeManualIncome({ registerOnly: true, product: 'X', currency: 'USD', method: 'binance', amount: 20 }).ok, false);  // Binance se anota en soles
+    assert.equal(normalizeManualIncome({ serial: 'K', currency: 'PEN', method: 'yape', amount: 140 }).ok, true);
+    assert.equal(normalizeManualIncome({ serial: 'K2', currency: 'ARS', amount: 15000 }).row.method, 'mp_argentina');                  // sin método: se elige el de la moneda
+    assert.equal(currencyMismatch('yape', 'USD'), true); assert.equal(currencyMismatch('transferencia', 'USD'), false);
+});
+test('Clasificación: Easy Master y Promo 2x1 son plugins; los presets tienen su etiqueta; los servicios siguen siendo servicios', () => {
+    assert.equal(kindOf({ product: 'Promo 2x1 (Easy Mix + Easy Master)' }), 'Plugin');
+    assert.equal(kindOf({ product: 'Easy Master' }), 'Plugin');
+    assert.equal(kindOf({ product: 'MIX Y MASTER' }), 'Servicio');
+    assert.equal(kindOf({ product: 'PRESET PERSONALIZADO' }), 'Servicio');
+    assert.equal(kindOf({ product: 'Omar Courtz Vocal Preset + Hades 66 Vocal Preset' }), 'Preset');
+    assert.equal(kindOf({ product: 'PRESET DE BAD BUNNY' }), 'Preset');
+    assert.equal(kindOf({ product: 'Preset de Omar Courtz (Payhip)' }), 'Payhip');
 });
