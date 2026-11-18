@@ -479,7 +479,7 @@ export const createPayPalOrder = async (req, res) => {
                 return; // Skip regular DB price logic for this product
             }
 
-            // OFFSZN Widget (ID 5004 o WIDGET_PRODUCT_IDS): 100% OFFSZN a precio fijo (9 US$). El precio lo fija el servidor, nunca el cliente.
+            // OFFSZN Widget (ID 5004 o WIDGET_PRODUCT_IDS): 100% OFFSZN a precio fijo (5 US$, Black Friday). El precio lo fija el servidor, nunca el cliente.
             if (isProductOfPlugin('offszn-widget', { id: prodIdToFind, name: item.product?.name })) {
                 const widgetPrice = WIDGET_PRICES[0];
                 subtotal += widgetPrice;
