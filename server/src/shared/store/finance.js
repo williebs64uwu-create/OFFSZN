@@ -19,15 +19,22 @@ export const PAYPAL_WITHDRAW_DEFAULT = { threshold: 200, fee: 4, rate: 3.3, prov
 // Servicios que das a mano (mezcla, master, beats...). Se reconocen por el nombre del producto.
 export const SERVICES = ['MIX Y MASTER', 'MEZCLA, MIX, MASTER', 'BEAT REMAKE', 'PRESET PERSONALIZADO'];
 const SERVICE_RE = /mezcla|\bmaster\b|beat remake|preset personalizado/i;
-const PLUGIN_RE = /easy mix|star chain|cassette|coca|plugin/i;
+const PLUGIN_RE = /easy (mix|master|pitch|level|deeser|clean)|promo 2\s*[x×]\s*1|star chain|cassette|coca|inka|omni|widget|ghost|\borb\b|plugin/i;
 export function kindOf(row) {
     const p = String(row?.product || '');
+    if (PLUGIN_RE.test(p)) return 'Plugin';          // primero los plugins: "Easy Master" no es el servicio "master"
     if (SERVICE_RE.test(p)) return 'Servicio';
     if (/payhip/i.test(p)) return 'Payhip';
-    if (PLUGIN_RE.test(p)) return 'Plugin';
+    if (/preset/i.test(p)) return 'Preset';
     if (/por confirmar|usd extra/i.test(p)) return 'Por revisar';
     return 'Otro';
 }
+
+// Cada método cobra en UNA moneda: Yape y Binance llegan en soles, PayPal en dólares, Mercado Pago Argentina en pesos.
+// Anotar un cobro con un método y una moneda que no van juntos (por ejemplo, Yape en dólares) cuenta mal el dinero.
+export const METHOD_CURRENCY = { yape: 'PEN', binance: 'PEN', paypal: 'USD', mp_argentina: 'ARS' };
+const CURRENCY_NAME = { PEN: 'soles', USD: 'dólares', ARS: 'pesos argentinos' };
+export const currencyMismatch = (method, currency) => Boolean(METHOD_CURRENCY[method] && currency && METHOD_CURRENCY[method] !== currency);
 
 // Binance: el dinero final es Yape en soles. Los USDT solo se muestran aproximados (soles ÷ este cambio, que sale de tus cobros reales ≈ 3,46).
 export const BINANCE_RATE_DEFAULT = 3.46;
@@ -81,6 +88,10 @@ export function normalizeManualIncome(input = {}, now = new Date()) {
     const amount = num(input.amount);
     if (amount === null || amount <= 0 || amount > 1000000) return { ok: false, error: 'Escribe el precio dado (mayor que 0).' };
     const method = METHODS.includes(input.method) ? input.method : DEFAULT_METHOD[currency];
+    if (currencyMismatch(method, currency)) {
+        const want = METHOD_CURRENCY[method];
+        return { ok: false, error: `${METHOD_LABEL[method]} se cobra en ${CURRENCY_NAME[want]}: cambia la moneda a ${CURRENCY_NAME[want]} (o elige otro método). Así no se cuenta mal el dinero.` };
+    }
     const gross = r2(amount);
     if (currency === 'ARS') return { ok: true, row: { ...base, method, currency, gross, net: null, status: 'pending_review' } };
     if (currency === 'USD' && method === 'paypal') {

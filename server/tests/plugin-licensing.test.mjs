@@ -593,3 +593,63 @@ test('PRESET RACK: la prueba NO se pide desde el plugin; una clave RACK-TRIAL da
     const wrong = await call(C.activateSerial, { serial_key: key, hwid: HW('PC-A', DEV_C), plugin_name: 'STAR CHAIN' });
     assert.equal(wrong.code, 403); assert.equal(wrong.body.code, 'wrong_product');
 });
+
+// ── SYNORA (plugin VST3 de instrumento: imagen/audio a MIDI y melodias; se vende aparte de Orb) ──
+test('SYNORA: prefijo SYNORA, clave propia, firma v2, prueba de 3 dias y exclusiva (no sirve en Orb ni en otros)', async () => {
+    const R = await import('../src/shared/config/pluginRegistry.js');
+    assert.equal(R.prefixForName('SYNORA'), 'SYNORA');
+    assert.equal(R.findPluginBySerial('SYNORA-FULL-AB12CD34-EF56AB78').id, 'synora');
+    assert.equal(R.findPluginByName('Synora Plugin').id, 'synora');
+    assert.equal(R.findPluginByName('Orb').id, 'orb', 'Orb no se confunde con SYNORA');
+    assert.equal(R.extractSerial('SYNORA: synora-full-ab12cd34-ef56ab78 '), 'SYNORA-FULL-AB12CD34-EF56AB78');
+    assert.equal(R.PLUGINS.find((p) => p.id === 'synora').trialDays, 3);
+
+    const serial = await newKey('SYNORA');
+    assert.match(serial, /^SYNORA-FULL-[A-F0-9]{8}-[A-F0-9]{8}$/);
+    assert.equal(fake.db.plugin_licenses.find((l) => l.serial_key === serial).plugin_name, 'SYNORA');
+
+    const hwid = HW('PC-WILLIE', DEV_A), nonce = 'nonce-synora';
+    const ok = await call(C.activateSerial, { serial_key: serial, hwid, plugin_name: 'SYNORA', nonce });
+    assert.equal(ok.code, 200, JSON.stringify(ok.body));
+    assert.equal(ok.body.license_type, 'lifetime');
+    assert.ok(verifyV2(ok, { serial, hwid, nonce }), 'la firma v2 debe verificar');
+
+    for (const other of ['Orb', 'Easy Pitch', 'Omni Plugin', 'GHOST', 'STAR CHAIN']) {
+        const r = await call(C.activateSerial, { serial_key: serial, hwid, plugin_name: other });
+        assert.equal(r.code, 403, `SYNORA no debe activarse en ${other}`);
+        assert.equal(r.body.code, 'wrong_product');
+    }
+    for (const name of ['Orb']) {
+        const otherKey = await newKey(name);
+        const back = await call(C.activateSerial, { serial_key: otherKey, hwid, plugin_name: 'SYNORA' });
+        assert.equal(back.code, 403, `la clave de ${name} no debe activar SYNORA`); assert.equal(back.body.code, 'wrong_product');
+    }
+});
+
+// ── CLYRA (plugin VST3 de efecto que se vende aparte de Orb) ───────────────────
+test('CLYRA: prefijo CLYRA, clave propia, firma v2 y exclusiva (no sirve en Orb ni en otros plugins)', async () => {
+    const R = await import('../src/shared/config/pluginRegistry.js');
+    assert.equal(R.prefixForName('CLYRA'), 'CLYRA');
+    assert.equal(R.findPluginBySerial('CLYRA-FULL-AB12CD34-EF56AB78').id, 'clyra');
+    assert.equal(R.findPluginByName('Orb').id, 'orb', 'Orb no se confunde con CLYRA');
+    assert.equal(R.extractSerial('CLYRA: clyra-full-ab12cd34-ef56ab78 '), 'CLYRA-FULL-AB12CD34-EF56AB78');
+
+    const serial = await newKey('CLYRA');
+    assert.match(serial, /^CLYRA-FULL-[A-F0-9]{8}-[A-F0-9]{8}$/);
+    assert.equal(fake.db.plugin_licenses.find((l) => l.serial_key === serial).plugin_name, 'CLYRA');
+
+    const hwid = HW('PC-WILLIE', DEV_A), nonce = 'nonce-clyra';
+    const ok = await call(C.activateSerial, { serial_key: serial, hwid, plugin_name: 'CLYRA', nonce });
+    assert.equal(ok.code, 200, JSON.stringify(ok.body));
+    assert.equal(ok.body.license_type, 'lifetime');
+    assert.ok(verifyV2(ok, { serial, hwid, nonce }), 'la firma v2 debe verificar');
+
+    for (const other of ['Orb', 'Easy Pitch', 'Omni Plugin', 'GHOST', 'STAR CHAIN']) {
+        const r = await call(C.activateSerial, { serial_key: serial, hwid, plugin_name: other });
+        assert.equal(r.code, 403, `CLYRA no debe activarse en ${other}`);
+        assert.equal(r.body.code, 'wrong_product');
+    }
+    const orbKey = await newKey('Orb');
+    const back = await call(C.activateSerial, { serial_key: orbKey, hwid, plugin_name: 'CLYRA' });
+    assert.equal(back.code, 403); assert.equal(back.body.code, 'wrong_product');
+});
