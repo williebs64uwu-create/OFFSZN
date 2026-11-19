@@ -1427,8 +1427,12 @@
             z-index: 9999;
         }
 
+        :root {
+            --bar-h: 64px;
+        }
+
         body {
-            padding-top: 40px;
+            padding-top: var(--bar-h);
         }
 
         .top-announcement-bar {
@@ -1436,13 +1440,14 @@
             top: 0;
             left: 0;
             width: 100%;
-            height: 40px;
+            height: var(--bar-h);
             display: flex;
             align-items: center;
             justify-content: center;
             text-decoration: none;
-            background: linear-gradient(90deg, #022c22 0%, #064e3b 50%, #022c22 100%);
-            border-bottom: 1px solid rgba(52, 211, 153, 0.25);
+            background: linear-gradient(90deg, #022c22 0%, #065f46 50%, #022c22 100%);
+            border-bottom: 2px solid rgba(52, 211, 153, 0.55);
+            box-shadow: 0 6px 24px rgba(5, 150, 105, 0.35);
             padding: 0 16px;
             z-index: 9999;
             box-sizing: border-box;
@@ -1451,8 +1456,8 @@
         }
 
         .top-announcement-bar:hover {
-            background: linear-gradient(90deg, #03362a 0%, #075e47 50%, #03362a 100%);
-            border-bottom-color: rgba(52, 211, 153, 0.45);
+            background: linear-gradient(90deg, #03362a 0%, #077a58 50%, #03362a 100%);
+            border-bottom-color: rgba(52, 211, 153, 0.8);
         }
 
         .top-announcement-content {
@@ -1461,32 +1466,66 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 12px;
-            font-size: 0.9rem;
+            gap: 18px;
+            font-size: 1.05rem;
             color: #ffffff;
         }
 
         .top-announcement-text {
             color: #f1f5f9;
-            font-weight: 500;
+            font-weight: 600;
             letter-spacing: -0.2px;
         }
 
         .top-announcement-text strong {
             color: #ffffff;
-            font-weight: 700;
+            font-weight: 800;
+        }
+
+        .bf-tag {
+            display: inline-block;
+            background: #fbbf24;
+            color: #000;
+            font-weight: 900;
+            font-size: 0.78rem;
+            letter-spacing: 0.8px;
+            padding: 3px 9px;
+            border-radius: 6px;
+            margin-right: 8px;
+            text-transform: uppercase;
+        }
+
+        .bf-countdown {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(0, 0, 0, 0.45);
+            border: 1px solid rgba(251, 191, 36, 0.6);
+            border-radius: 10px;
+            padding: 6px 14px;
+            flex-shrink: 0;
+        }
+
+        .bf-time {
+            font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+            font-variant-numeric: tabular-nums;
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: #fff;
+            letter-spacing: 1px;
+            line-height: 1;
         }
 
         .top-announcement-arrow {
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            width: 24px;
-            height: 24px;
+            width: 28px;
+            height: 28px;
             border-radius: 50%;
             background: rgba(255, 255, 255, 0.18);
             color: #ffffff;
-            font-size: 0.85rem;
+            font-size: 0.95rem;
             flex-shrink: 0;
             transition: transform 0.22s cubic-bezier(0.16, 1, 0.3, 1), background 0.22s ease;
         }
@@ -1497,25 +1536,76 @@
         }
 
         @media (max-width: 768px) {
-            body {
-                padding-top: 38px !important;
+            :root {
+                --bar-h: 76px;
             }
 
             .top-announcement-bar {
-                height: 38px;
-                padding: 0 12px;
+                padding: 0 10px;
             }
 
             .top-announcement-content {
-                gap: 8px;
-                font-size: 0.82rem;
+                flex-direction: column;
+                gap: 6px;
+                font-size: 0.9rem;
+            }
+
+            .top-announcement-text {
+                text-align: center;
+                line-height: 1.25;
+            }
+
+            .bf-tag {
+                font-size: 0.7rem;
+                padding: 2px 7px;
+            }
+
+            .bf-countdown {
+                padding: 3px 12px;
+            }
+
+            .bf-time {
+                font-size: 1.3rem;
             }
 
             .top-announcement-arrow {
-                width: 22px;
-                height: 22px;
-                font-size: 0.76rem;
+                display: none;
             }
+        }
+
+        /* Cuando sale la barra EASY MIX al hacer scroll, el banner (más alto) se esconde para no asomar debajo */
+        body:has(.em-navbar.nav-visible) .top-announcement-bar {
+            visibility: hidden;
+        }
+
+        /* Tarjeta de pago: PAGO ÚNICO destacado */
+        .pay-once-ribbon {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            background: linear-gradient(90deg, #059669, #10b981);
+            color: #fff;
+            font-weight: 900;
+            font-size: 0.95rem;
+            letter-spacing: 0.6px;
+            text-transform: uppercase;
+            padding: 9px 14px;
+            border-radius: 10px;
+            margin: 0 auto 14px auto;
+            box-shadow: 0 4px 18px rgba(16, 185, 129, 0.35);
+        }
+
+        .pay-once-note {
+            text-align: center;
+            color: #d4d4d8;
+            font-size: 0.9rem;
+            font-weight: 600;
+            margin: -12px 0 20px 0;
+        }
+
+        .pay-once-note strong {
+            color: #34d399;
         }
 
         /* WhatsApp Floating Widget */
@@ -2379,7 +2469,10 @@
     <a href="#pricing-section" class="top-announcement-bar" id="top-announcement-bar"
         title="Obtener licencia de Easy Mix">
         <div class="top-announcement-content">
-            <span class="top-announcement-text">🚀 Obtén tu <strong>licencia de por vida</strong> de Easy Mix</span>
+            <span class="top-announcement-text"><span class="bf-tag">Black Friday</span><strong>Licencia de por vida</strong> de Easy Mix</span>
+            <span class="bf-countdown" id="bf-countdown" aria-label="Tiempo restante de la oferta">
+                <span class="bf-time" id="bf-time">00:00:00</span>
+            </span>
             <span class="top-announcement-arrow" aria-hidden="true">
                 <i class="bi bi-arrow-right"></i>
             </span>
@@ -4363,7 +4456,7 @@
 
         <!-- ==================== OBTENER LICENCIA DE POR VIDA (PRICING & CHECKOUT) ==================== -->
         <section class="pricing-section-container" id="pricing-section"
-            style="padding: 85px 0 70px; background: #000; border-top: 1px solid rgba(255,255,255,0.06); scroll-margin-top: 60px;">
+            style="padding: 85px 0 70px; background: #000; border-top: 1px solid rgba(255,255,255,0.06); scroll-margin-top: calc(var(--bar-h) + 8px);">
             <div class="container">
                 <div class="pricing-double-layout">
 
@@ -4429,6 +4522,7 @@
                     <div class="pricing-card-col">
                         <div id="pricing-wall" class="pricing-card-inner">
                             <div class="pricing-popular-badge">MÁS POPULAR</div>
+                            <div class="pay-once-ribbon">✔ Pago único · Sin mensualidades</div>
                             <h3 class="pricing-card-title">Licencia Full de Easy Mix</h3>
                             <p class="pricing-card-platform">Disponible en Windows y Mac</p>
 
@@ -4438,8 +4532,9 @@
                                     style="font-size: 1.3rem; text-decoration: line-through; color: rgba(255,255,255,0.3); font-weight: 500;">$35</span>
                                 <span id="easy-mix-price-val"
                                     style="font-size: 3rem; font-weight: 800; color: #fff;">$25</span>
-                                <span style="font-size: 1rem; color: #888;">único</span>
+                                <span style="font-size: 1.05rem; color: #34d399; font-weight: 800;">pago único</span>
                             </div>
+                            <p class="pay-once-note">Pagas <strong>una sola vez</strong> y es tuya para siempre.</p>
 
                             <!-- Direct PayPal Checkout -->
                             <div id="plugin-paypal-button-container"
@@ -5181,6 +5276,39 @@
     <script src="/script/plugin-checkout.js?v=20261002"></script>
     <script src="/script/yape-checkout.js?v=20261101_dyn"></script>
     <script src="/script/pay-click-tracker.js?v=20261011"></script>
+
+    <script>
+        // Contador de Black Friday: 24 horas por visitante (se guarda en su navegador al entrar por primera vez).
+        (function () {
+            var KEY = 'em_bf_end';
+            var DURATION = 24 * 60 * 60 * 1000;
+            var bar = document.getElementById('top-announcement-bar');
+            var box = document.getElementById('bf-countdown');
+            var time = document.getElementById('bf-time');
+            if (!bar || !box || !time) return;
+            var end = 0;
+            try { end = parseInt(localStorage.getItem(KEY), 10) || 0; } catch (e) {}
+            if (!end) {
+                end = Date.now() + DURATION;
+                try { localStorage.setItem(KEY, String(end)); } catch (e) {}
+            }
+            function p(n) { return (n < 10 ? '0' : '') + n; }
+            function tick() {
+                var left = end - Date.now();
+                if (left <= 0) {
+                    box.style.display = 'none';
+                    var tag = bar.querySelector('.bf-tag');
+                    if (tag) tag.style.display = 'none';
+                    clearInterval(timer);
+                    return;
+                }
+                var t = Math.min(Math.floor(left / 1000), 86399);
+                time.textContent = p(Math.floor(t / 3600)) + ':' + p(Math.floor(t % 3600 / 60)) + ':' + p(t % 60);
+            }
+            var timer = setInterval(tick, 1000);
+            tick();
+        })();
+    </script>
 </body>
 
 </html>
