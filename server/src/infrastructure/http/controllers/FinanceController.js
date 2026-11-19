@@ -72,7 +72,7 @@ export const financeSaveWithdrawRate = async (req, res) => {
 
 // POST /admin/finance/bank-transfers { pen, date, note } · DELETE /admin/finance/bank-transfers/:id → dinero enviado al banco
 export const financeAddTransfer = async (req, res) => {
-    try { return res.json({ ok: true, transfer: await addBankTransfer({ pen: req.body?.pen, date: req.body?.date, note: req.body?.note }) }); } catch (e) { return fail(res, e); }
+    try { return res.json({ ok: true, transfer: await addBankTransfer({ pen: req.body?.pen, date: req.body?.date, note: req.body?.note, fee: req.body?.fee }) }); } catch (e) { return fail(res, e); }
 };
 export const financeDeleteTransfer = async (req, res) => {
     try { await deleteBankTransfer(req.params.id); return res.json({ ok: true }); } catch (e) { return fail(res, e); }

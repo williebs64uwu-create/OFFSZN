@@ -65,12 +65,14 @@ async function writeTransfers(list) {
     const { error } = await supabase.from('finance_settings').upsert({ key: 'bank_transfers', value: list, updated_at: new Date().toISOString() }, { onConflict: 'key' });
     if (error) throw error;
 }
-export async function addBankTransfer({ pen, date, note }) {
+export async function addBankTransfer({ pen, date, note, fee }) {
     const amount = Number(pen);
     if (!Number.isFinite(amount) || amount <= 0 || amount > 100000000) throw Object.assign(new Error('Escribe cuántos soles enviaste al banco.'), { status: 400 });
+    const cost = fee === undefined || fee === null || String(fee).trim() === '' ? 0 : Number(fee);
+    if (!Number.isFinite(cost) || cost < 0 || cost > amount) throw Object.assign(new Error('La comisión no puede ser negativa ni mayor que lo enviado.'), { status: 400 });
     const day = /^\d{4}-\d{2}-\d{2}$/.test(String(date)) ? date : new Date(Date.now() - 5 * 3600000).toISOString().slice(0, 10);
     const current = (await getSettings()).transfers;
-    const item = { id: `t-${Date.now().toString(36)}`, at: new Date().toISOString(), date: day, pen: Math.round(amount * 100) / 100, note: String(note || '').trim().slice(0, 120) || null };
+    const item = { id: `t-${Date.now().toString(36)}`, at: new Date().toISOString(), date: day, pen: Math.round(amount * 100) / 100, ...(cost > 0 ? { fee: Math.round(cost * 100) / 100 } : {}), note: String(note || '').trim().slice(0, 120) || null };
     await writeTransfers([...current, item]);
     return item;
 }
