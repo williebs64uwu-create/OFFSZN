@@ -325,3 +325,9 @@ test('Clasificación: Easy Master y Promo 2x1 son plugins; los presets tienen su
     assert.equal(kindOf({ product: 'PRESET DE BAD BUNNY' }), 'Preset');
     assert.equal(kindOf({ product: 'Preset de Omar Courtz (Payhip)' }), 'Payhip');
 });
+
+test('Envío al banco con comisión: de Yape/Ligo sale lo enviado + la comisión; al banco llega solo lo enviado', () => {
+    const k = liveBalances({ yape: yapeSnap, bank: bankSnap, transfers: [{ at: '2026-11-19T05:08:00Z', date: '2026-11-19', pen: 1000, fee: 3.54 }] });
+    assert.equal(k.yape.now, Math.round((287.5 - 1003.54) * 100) / 100);
+    assert.equal(k.bank.now, 28000);                       // 27.000 + 1.000, la comisión no llega al banco
+});

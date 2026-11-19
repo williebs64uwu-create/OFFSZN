@@ -200,7 +200,7 @@
         on('#bankForm', submit('/admin/finance/bank', 'PUT', (f) => ({ pen: f.get('pen'), asOf: f.get('asOf') }), 'Saldo actualizado'));
         on('#yapeForm', submit('/admin/finance/yape', 'PUT', (f) => ({ pen: f.get('pen'), asOf: f.get('asOf') }), 'Saldo de Yape guardado'));
         on('#rateForm', submit('/admin/finance/withdraw-rate', 'PUT', (f) => ({ rate: f.get('rate') }), 'Cambio guardado'));
-        on('#transferForm', submit('/admin/finance/bank-transfers', 'POST', (f) => ({ pen: f.get('pen'), date: f.get('date'), note: f.get('note') }), 'Envío al banco anotado'));
+        on('#transferForm', submit('/admin/finance/bank-transfers', 'POST', (f) => ({ pen: f.get('pen'), date: f.get('date'), note: f.get('note'), fee: f.get('fee') }), 'Envío al banco anotado'));
         on('#expForm', submit('/admin/finance/expenses', 'POST', (f) => ({ category: f.get('category'), amountPen: f.get('amountPen'), spentAt: f.get('spentAt'), note: f.get('note'), ref: f.get('ref') }), 'Gasto guardado'));
         const wf = $('#wdForm');
         if (wf) {
@@ -508,9 +508,9 @@
             const { d, sentPen } = x;
             view.innerHTML = `${x.head}
                 <div class="grid grid-2">
-                    ${card('Anotar un envío', 'Baja tu Yape y sube tu banco.', `<form id="transferForm" class="stack"><div class="row"><input class="input" name="pen" type="number" step="0.01" min="0.01" placeholder="Soles enviados al banco" required style="flex:1"><input class="input" name="date" type="date" value="${today()}" style="width:auto"></div><input class="input" name="note" placeholder="Nota (opcional)"><button class="btn btn--brand" type="submit">${icon('plus')} Anotar envío</button></form>`)}
+                    ${card('Anotar un envío', 'Baja tu Yape y sube tu banco.', `<form id="transferForm" class="stack"><div class="row"><input class="input" name="pen" type="number" step="0.01" min="0.01" placeholder="Soles enviados al banco" required style="flex:1"><input class="input" name="date" type="date" value="${today()}" style="width:auto"></div><input class="input" name="fee" type="number" step="0.01" min="0" placeholder="Comisión en soles (opcional, ej. 3,54)"><span class="muted small">Si te cobraron comisión, sale de tu Yape/Ligo y no llega al banco.</span><input class="input" name="note" placeholder="Nota (opcional)"><button class="btn btn--brand" type="submit">${icon('plus')} Anotar envío</button></form>`)}
                     ${card('Enviado este mes', `${monthLabel(d.month)} · desde Yape`, `<div class="row between" style="align-items:baseline"><span class="kpi__value fx-net">${pen(sentPen)}</span><span class="muted small">${(d.transfers || []).length} ${(d.transfers || []).length === 1 ? 'envío' : 'envíos'}</span></div>
-                        ${(d.transfers || []).map((t) => `<div class="row between small muted" style="margin-top:6px"><span>${esc(t.date)} · ${esc(t.note || 'Envío al banco')}</span><span><b>${pen(t.pen)}</b> <button class="fx-edit" data-del-transfer="${esc(t.id)}" title="Quitar este envío" aria-label="Quitar este envío">✕</button></span></div>`).join('') || '<p class="muted small">Todavía no anotaste envíos este mes.</p>'}`)}
+                        ${(d.transfers || []).map((t) => `<div class="row between small muted" style="margin-top:6px"><span>${esc(t.date)} · ${esc(t.note || 'Envío al banco')}</span><span><b>${pen(t.pen)}</b>${t.fee ? ` <span class="fx-fee">(+${pen(t.fee)} comisión)</span>` : ''} <button class="fx-edit" data-del-transfer="${esc(t.id)}" title="Quitar este envío" aria-label="Quitar este envío">✕</button></span></div>`).join('') || '<p class="muted small">Todavía no anotaste envíos este mes.</p>'}`)}
                 </div>`;
             bind(x);
         }
@@ -525,7 +525,7 @@
             out.push({ t: Date.parse(r.occurred_at), kind: 'venta', color: 'green', icon: 'trend', title: r.product || 'Venta', sub: `${d.methods[r.method] || r.method}${r.email ? ` · ${r.email}` : ''}`, amount: `+ ${show}`, cls: 'fx-net', tag: r.kind, tagCls: KIND_CLASS[r.kind] || '' });
         }
         for (const t of d.withdrawals || []) out.push({ t: Date.parse(t.at || `${t.date}T12:00:00-05:00`), kind: 'retiro', color: 'pp', icon: 'send', title: t.to === 'bank' ? 'Retiro de PayPal → banco' : 'Retiro de PayPal → Yape / Ligo', sub: `−${usd(t.usd)} · costo −${usd(t.fee)} · cambio ${rate1(t.rate)}${t.note ? ` · ${t.note}` : ''}`, amount: `+ ${pen(t.pen)} ${t.to === 'bank' ? 'al banco' : 'a Yape'}`, cls: 'fx-net', tag: 'Conversión', tagCls: 'fx-tag--pp' });
-        for (const t of d.transfers || []) out.push({ t: Date.parse(t.at || `${t.date}T12:00:00-05:00`), kind: 'envio', color: 'gray', icon: 'wallet', title: 'Envío de Yape → banco', sub: t.note || 'Dinero que pasó a tu banco', amount: `${pen(t.pen)} al banco`, cls: '', tag: 'No es gasto', tagCls: '' });
+        for (const t of d.transfers || []) out.push({ t: Date.parse(t.at || `${t.date}T12:00:00-05:00`), kind: 'envio', color: 'gray', icon: 'wallet', title: 'Envío de Yape → banco', sub: `${t.note || 'Dinero que pasó a tu banco'}${t.fee ? ` · comisión ${pen(t.fee)}` : ''}`, amount: `${pen(t.pen)} al banco`, cls: '', tag: 'No es gasto', tagCls: '' });
         for (const e of d.expenses) out.push({ t: Date.parse(e.created_at || `${e.spent_at}T12:00:00-05:00`), kind: 'gasto', color: 'red', icon: 'cart', title: e.category, sub: e.note || 'Gasto en soles', amount: `− ${pen(e.amount_pen)}`, cls: 'fx-fee', tag: 'Gasto', tagCls: 'fx-tag--warn' });
         return out.sort((a, b) => b.t - a.t);
     };
