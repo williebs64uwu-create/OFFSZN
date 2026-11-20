@@ -86,6 +86,9 @@ export const R2_CURRENT_VERSION = 'v4';
 // META PIXEL & CONVERSIONS API (CAPI)
 export const META_PIXEL_ID = cleanConfigValue(process.env.META_PIXEL_ID) || '1608823860672348';
 export const META_CAPI_ACCESS_TOKEN = cleanConfigValue(process.env.META_CAPI_ACCESS_TOKEN);
+// Dataset propio de STAR CHAIN (si falta el token, STAR sigue yendo al dataset general)
+export const META_PIXEL_ID_STAR = cleanConfigValue(process.env.META_PIXEL_ID_STAR) || '1666598788296660';
+export const META_CAPI_ACCESS_TOKEN_STAR = cleanConfigValue(process.env.META_CAPI_ACCESS_TOKEN_STAR);
 export const META_GRAPH_API_VERSION = cleanConfigValue(process.env.META_GRAPH_API_VERSION) || 'v21.0';
 export const META_TEST_EVENT_CODE = cleanConfigValue(process.env.META_TEST_EVENT_CODE);
 

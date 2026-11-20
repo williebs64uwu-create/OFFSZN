@@ -2,6 +2,8 @@ import crypto from 'crypto';
 import {
     META_PIXEL_ID,
     META_CAPI_ACCESS_TOKEN,
+    META_PIXEL_ID_STAR,
+    META_CAPI_ACCESS_TOKEN_STAR,
     META_GRAPH_API_VERSION,
     META_TEST_EVENT_CODE
 } from '../../shared/config/config.js';
@@ -67,8 +69,15 @@ class MetaCapiService {
         actionSource = 'website'
     }) {
         try {
-            const pixelId = (META_PIXEL_ID || '').trim();
-            const accessToken = (META_CAPI_ACCESS_TOKEN || '').trim();
+            let pixelId = (META_PIXEL_ID || '').trim();
+            let accessToken = (META_CAPI_ACCESS_TOKEN || '').trim();
+
+            // STAR CHAIN va a su propio dataset (solo si ya hay token para él)
+            const ids = Array.isArray(customData?.content_ids) ? customData.content_ids : [];
+            if (ids.includes('star_chain') && META_CAPI_ACCESS_TOKEN_STAR && META_PIXEL_ID_STAR) {
+                pixelId = META_PIXEL_ID_STAR.trim();
+                accessToken = META_CAPI_ACCESS_TOKEN_STAR.trim();
+            }
             const graphVersion = (META_GRAPH_API_VERSION || 'v21.0').trim();
 
             if (!pixelId || !accessToken) {
