@@ -1471,6 +1471,15 @@ export const capturePayPalOrder = async (req, res) => {
                             </div>
                         ` : '';
 
+                        // Manual de instalación en Pro Tools (StudioVerse): va justo debajo de la serial
+                        const PRO_TOOLS_MANUAL_URL = 'https://drive.google.com/file/d/1jmTnNYPsYQaXZ3nvHaYh5Q5t7dF5VpDE/view?usp=drivesdk';
+                        const proToolsSection = (isPlugin && keysGenerated.length > 0) ? `
+                            <div style="margin:20px 0; padding:18px 20px; background:#111827; border:1px solid rgba(255,255,255,0.12); border-radius:12px; text-align:center;">
+                                <p style="color:#fff; font-size:1.05rem; font-weight:800; letter-spacing:1px; text-transform:uppercase; margin:0 0 10px;">Cómo instalar en Pro Tools:</p>
+                                <a href="${PRO_TOOLS_MANUAL_URL}" target="_blank" rel="noopener noreferrer" style="color:#ff9f0a; font-size:0.95rem; font-weight:600; word-break:break-all;">${PRO_TOOLS_MANUAL_URL}</a>
+                            </div>
+                        ` : '';
+
                         let downloadLinks = null;
                         if (isPlugin) {
                             if (isRack) {
@@ -1553,6 +1562,7 @@ export const capturePayPalOrder = async (req, res) => {
                                 <p style="color:#ccc; line-height:1.6;">Hola <b>${userNickname}</b>, procesamos correctamente el pago por <b style="color:#fff;">${item.product.name}</b>.</p>
                                 ${serialKeySection}
                                 ${downloadSection}
+                                ${proToolsSection}
                                 <hr style="border:0; border-top:1px solid #222; margin:25px 0;">
                                 <p style="font-size:0.75rem; color:#555;">Este es un recibo automático de OFFSZN. Si tienes problemas, contáctanos por WhatsApp.</p>
                             </div>
