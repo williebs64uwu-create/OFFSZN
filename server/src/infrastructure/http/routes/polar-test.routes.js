@@ -6,11 +6,18 @@
 import { Router } from 'express';
 import rateLimit from 'express-rate-limit';
 import { POLAR_CATALOG, polarProduct } from '../../../shared/store/polarCatalog.js';
+import { countryOf } from '../../../shared/utils/emailValidation.js';
 
 const router = Router();
 const limiter = rateLimit({ windowMs: 10 * 60 * 1000, limit: 20, standardHeaders: 'draft-7', legacyHeaders: false, message: { error: 'Demasiados intentos. Prueba en unos minutos.' } });
 
 const apiBase = () => (process.env.POLAR_SERVER === 'sandbox' ? 'https://sandbox-api.polar.sh' : 'https://api.polar.sh');
+
+// País del visitante según el CDN (Vercel). null si no se pudo detectar: el checkout entonces muestra todos los métodos.
+router.get('/geo', (req, res) => {
+    res.set('Cache-Control', 'no-store');
+    res.json({ country: countryOf(req) });
+});
 
 router.get('/polar-test/config', limiter, (req, res) => {
     const products = Object.entries(POLAR_CATALOG).map(([slug, p]) => ({ slug, name: p.name, priceUsd: p.priceUsd, note: p.note || '' }));

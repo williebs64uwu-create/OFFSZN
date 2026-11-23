@@ -1202,6 +1202,7 @@
         // Sin selector de país: Yape se muestra siempre (el modal pide un celular +51). Con ?country=XX distinto de PE se oculta.
         const forced = (new URLSearchParams(location.search).get('country') || '').toUpperCase();
         if (yape) yape.style.display = (forced && forced !== 'PE') ? 'none' : '';
+        if (window.applyGeoMethods) window.applyGeoMethods();
     }
 
     function handleCountryChange() {
@@ -1319,6 +1320,32 @@
         const ppBox = document.querySelector('.payment-buttons-box');
         const divider = document.querySelector('.alt-methods-divider');
         if (ppBox && divider) { divider.insertAdjacentElement('afterend', ppBox); ppBox.style.marginTop = '0'; ppBox.style.marginBottom = '10px'; }
+        // Métodos locales por país: PE → Yape, AR → Mercado Pago, VE → Binance. Tarjeta y PayPal siempre.
+        // Si el país no se detecta, se muestran todos (no perder ventas).
+        const LOCAL = { PE: 'btnYapeNow', AR: 'btnActionMp', VE: 'btnActionCrypto' };
+        window.applyGeoMethods = function () {
+            if (!window.__geoReady) return;
+            const c = window.__geo;
+            const all = Object.values(LOCAL);
+            const show = (!c || window.__showAllMethods) ? all : (LOCAL[c] ? [LOCAL[c]] : []);
+            all.forEach((id) => { const el = document.getElementById(id); if (el) el.style.display = show.includes(id) ? '' : 'none'; });
+            const more = document.getElementById('polarShowAll');
+            if (more) more.style.display = (show.length < all.length) ? '' : 'none';
+        };
+        (function () {
+            const help = document.getElementById('btnActionHelp');
+            if (help) {
+                const a = document.createElement('a');
+                a.id = 'polarShowAll'; a.href = '#'; a.className = 'pay-help'; a.style.display = 'none'; a.style.marginTop = '6px';
+                a.textContent = 'Ver todos los métodos de pago';
+                a.onclick = (e) => { e.preventDefault(); window.__showAllMethods = true; window.applyGeoMethods(); };
+                help.insertAdjacentElement('afterend', a);
+            }
+            const forced = (qs.get('country') || '').toUpperCase();
+            const done = (c) => { window.__geo = /^[A-Z]{2}$/.test(c || '') ? c : null; window.__geoReady = true; window.applyGeoMethods(); };
+            if (forced) return done(forced);
+            fetch('/api/geo', { cache: 'no-store' }).then((r) => r.json()).then((d) => done(d && d.country)).catch(() => done(null));
+        })();
         // Lista corta "Tu compra incluye" (solo en la prueba)
         const perks = document.querySelector('.perks-list');
         if (perks) {
