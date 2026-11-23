@@ -10,7 +10,7 @@
   *{box-sizing:border-box}body{margin:0;min-height:100vh;display:grid;place-items:center;background:var(--bg);color:var(--fg);font-family:system-ui,sans-serif;padding:16px}
   .card{width:100%;max-width:420px;background:var(--card);border-radius:16px;padding:24px}
   h1{margin:0 0 6px;font-size:22px}p{color:var(--mut);margin:0 0 16px;font-size:14px}
-  input{width:100%;padding:12px;border-radius:10px;border:1px solid #2a2a30;background:#0f0f12;color:var(--fg);font-size:16px;margin-bottom:12px}
+  select,input{width:100%;padding:12px;border-radius:10px;border:1px solid #2a2a30;background:#0f0f12;color:var(--fg);font-size:16px;margin-bottom:12px}
   button{width:100%;padding:14px;border:0;border-radius:10px;background:#fff;color:#000;font-weight:600;font-size:16px;cursor:pointer}
   button:disabled{opacity:.5;cursor:default}
   #msg{margin-top:12px;font-size:14px}.ok{color:var(--ok)}.err{color:var(--err)}
@@ -20,8 +20,9 @@
 <body>
 <main class="card">
   <span class="tag" id="tag">Página de prueba</span>
-  <h1>STAR CHAIN</h1>
-  <p>Checkout con Polar (prueba aislada, no afecta tu carrito ni PayPal/Yape).</p>
+  <h1>Checkout Polar</h1>
+  <p>Prueba aislada (no afecta tu carrito ni PayPal/Yape). Elige un producto:</p>
+  <select id="product"></select>
   <input id="email" type="email" placeholder="Tu correo (opcional)" autocomplete="email">
   <button id="pay">Pagar con Polar</button>
   <div id="msg" role="status"></div>
@@ -32,12 +33,14 @@
   if (q.get('status') === 'success') { msg.className = 'ok'; msg.textContent = '✅ Pago recibido. Checkout: ' + (q.get('checkout_id') || ''); }
   fetch('/api/polar-test/config').then(r => r.json()).then(c => {
     if (c.sandbox) $('tag').textContent = 'Sandbox de Polar (sin cobro real)';
-    if (!c.ready) { btn.disabled = true; msg.className = 'err'; msg.textContent = 'Falta configurar POLAR_ACCESS_TOKEN y POLAR_PRODUCT_ID en el servidor.'; }
+    $('product').innerHTML = (c.products || []).map(p => `<option value="${p.slug}">${p.name} · $${p.priceUsd}</option>`).join('');
+    if (q.get('p')) $('product').value = q.get('p');
+    if (!c.ready) { btn.disabled = true; msg.className = 'err'; msg.textContent = 'Falta configurar POLAR_ACCESS_TOKEN en el servidor.'; }
   }).catch(() => {});
   btn.onclick = async () => {
     btn.disabled = true; msg.className = ''; msg.textContent = 'Creando checkout…';
     try {
-      const r = await fetch('/api/polar-test/checkout', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email: $('email').value }) });
+      const r = await fetch('/api/polar-test/checkout', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ product: $('product').value, email: $('email').value }) });
       const d = await r.json();
       if (!r.ok) throw new Error(d.error || 'Error');
       location.href = d.url;
