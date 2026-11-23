@@ -137,7 +137,9 @@ class PluginDirectCheckout {
         script.id = 'paypal-sdk-plugin-direct';
         // All plugins (including Coca-Cola) use single merchant ID — no multi-payee SDK issues.
         // Coca-Cola split is handled server-side in the isolated /api/orders/coke/* endpoint.
-        script.src = `https://www.paypal.com/sdk/js?client-id=${clientId}&currency=USD&intent=capture&merchant-id=MXV5F6X8JXG4S`;
+        // Prueba Polar (?polar=1): PayPal queda como un solo botón; la tarjeta la cubre el bloque de Polar
+        const polarTest = new URLSearchParams(window.location.search).get('polar') === '1';
+        script.src = `https://www.paypal.com/sdk/js?client-id=${clientId}&currency=USD&intent=capture&merchant-id=MXV5F6X8JXG4S${polarTest ? '&disable-funding=paylater,card,credit' : ''}`;
         script.setAttribute('data-merchant-id', 'MXV5F6X8JXG4S');
 
         script.onload = () => this.renderPayPalButtons();
@@ -323,12 +325,9 @@ class PluginDirectCheckout {
             onError: (err) => {
                 console.error('[PluginCheckout] PayPal Error:', err);
             },
-            style: {
-                layout: 'vertical',
-                color: 'gold',
-                shape: 'rect',
-                label: 'pay'
-            }
+            style: (new URLSearchParams(window.location.search).get('polar') === '1')
+                ? { layout: 'vertical', color: 'white', shape: 'rect', label: 'paypal', height: 52 }
+                : { layout: 'vertical', color: 'gold', shape: 'rect', label: 'pay' }
         }).render('#plugin-paypal-button-container').then(() => {
             // Hide skeleton container once buttons render
             const skeletons = this.container.querySelector('.skeleton-container');

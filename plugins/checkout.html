@@ -826,15 +826,14 @@
                 </select>
             </div>
 
-            <!-- 2b. PRUEBA: tarjeta internacional con Polar (oculto; solo se ve con ?polar=1 y pago único) -->
-            <div id="polarCard" style="display:none;margin-bottom:14px;border:1px solid #d1d5db;border-radius:14px;padding:14px;background:#fff">
-                <div style="display:flex;align-items:center;gap:10px;background:#3b82f6;color:#fff;border-radius:10px;padding:12px 14px;font-weight:600;font-size:14px;box-shadow:0 0 0 3px #bfdbfe;margin-bottom:12px">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" aria-hidden="true"><rect x="2.5" y="5" width="19" height="14" rx="2.5"/><path d="M2.5 10h19"/></svg>
-                    <span style="flex:1">Tarjeta de crédito o débito</span>
-                    <span style="display:flex;gap:4px"><b style="background:#fff;color:#1a4b9c;font-size:9px;padding:3px 5px;border-radius:3px;font-style:italic">VISA</b><b style="background:#fff;color:#111;font-size:9px;padding:3px 5px;border-radius:3px">MC</b><b style="background:#fff;color:#2a8bd0;font-size:9px;padding:3px 5px;border-radius:3px">AMEX</b></span>
-                </div>
-                <button type="button" id="btnPolarPay" onclick="payWithPolar()" style="width:100%;padding:15px;background:#000;color:#fff;border:0;border-radius:100px;font-weight:700;font-size:15px;cursor:pointer;font-family:inherit">Pagar con tarjeta · $49.00 USD</button>
-                <div id="polarMsg" style="text-align:center;font-size:12px;color:#6b7280;margin-top:10px">Tarjeta, Google Pay o Apple Pay según tu dispositivo · Pago seguro procesado por Polar</div>
+            <!-- 2b. PRUEBA: tarjeta internacional con Polar (oculto; solo se ve con ?polar=1 y pago único). Misma fila que Yape / Mercado Pago. -->
+            <div id="polarCard" style="display:none;margin-bottom:6px">
+                <button type="button" id="btnPolarPay" class="pay-method" onclick="payWithPolar()" style="min-height:60px">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="#111827" stroke-width="1.7" stroke-linecap="round" aria-hidden="true" style="background:#f3f4f6;padding:5px"><rect x="2.5" y="5" width="19" height="14" rx="2.5"/><path d="M2.5 10h19M6 15h4"/></svg>
+                    <span class="pm-name">Tarjeta de crédito o débito<small id="polarSub" style="display:block;font-weight:500;font-size:12px;color:var(--text-muted);margin-top:1px">Visa, MC, Amex · Google/Apple Pay</small></span>
+                    <span class="pm-price">$49 USD</span>
+                </button>
+                <div id="polarMsg" style="display:none;text-align:center;font-size:12px;color:#b91c1c;margin-top:8px"></div>
             </div>
 
             <!-- 3. Official PayPal & Card Buttons -->
@@ -1298,7 +1297,7 @@
         // Prueba de orden: PayPal pasa debajo del divisor "o paga con"
         const ppBox = document.querySelector('.payment-buttons-box');
         const divider = document.querySelector('.alt-methods-divider');
-        if (ppBox && divider) divider.insertAdjacentElement('afterend', ppBox);
+        if (ppBox && divider) { divider.insertAdjacentElement('afterend', ppBox); ppBox.style.marginTop = '0'; ppBox.style.marginBottom = '10px'; }
     }
     if (qs.get('polar') === 'success') {
         blk.style.display = '';
@@ -1317,7 +1316,7 @@
     window.payWithPolar = async function () {
         const btn = document.getElementById('btnPolarPay');
         if (window.PLUGIN_BEFORE_PAY && !window.PLUGIN_BEFORE_PAY()) return;
-        btn.disabled = true; const old = btn.textContent; btn.textContent = 'Preparando pago seguro…';
+        const sub = document.getElementById('polarSub'); const oldSub = sub.textContent; btn.disabled = true; sub.textContent = 'Preparando pago seguro…'; if (msg) msg.style.display = 'none';
         try {
             const r = await fetch('/api/polar-test/checkout', {
                 method: 'POST', headers: { 'Content-Type': 'application/json' },
@@ -1328,14 +1327,14 @@
             try {
                 await loadEmbed();
                 const co = await window.Polar.EmbedCheckout.create(d.url, { theme: 'light' });
-                co.addEventListener('close', () => { btn.disabled = false; btn.textContent = old; });
+                co.addEventListener('close', () => { btn.disabled = false; sub.textContent = oldSub; });
             } catch (embedErr) {
                 // Si el embebido no abre (dominio aún sin validar en Polar), seguimos en la página de Polar
                 window.location.href = d.url;
             }
         } catch (e) {
-            btn.disabled = false; btn.textContent = old;
-            if (msg) { msg.style.color = '#b91c1c'; msg.textContent = e.message || 'Error al iniciar el pago'; }
+            btn.disabled = false; sub.textContent = oldSub;
+            if (msg) { msg.style.display = 'block'; msg.textContent = e.message || 'Error al iniciar el pago'; }
         }
     };
 })();
