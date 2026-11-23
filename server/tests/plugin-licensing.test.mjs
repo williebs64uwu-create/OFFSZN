@@ -10,6 +10,7 @@ const { publicKey, privateKey } = crypto.generateKeyPairSync('ed25519');
 process.env.PLUGIN_PRIVATE_KEY = privateKey.export({ format: 'der', type: 'pkcs8' }).toString('base64');
 process.env.OFFSZN_VARIABLE_PANEL = 'clave-de-prueba';
 process.env.OMNI_PRODUCT_IDS = '';               // Omni aún sin producto en la tienda
+process.env.REC_PRODUCT_IDS = '7788';             // DAW RECORDER: id de producto de prueba
 process.env.WIDGET_PRODUCT_IDS = '7777';         // OFFSZN Widget: id de producto de prueba
 
 // ── Supabase en memoria (solo lo que usa PluginLicensingController) ───────────────────────────────────────────────
@@ -342,6 +343,46 @@ test('OFFSZN Widget: prefijo WIDGET, prueba de 3 días, firma v2 y exclusiva (no
     assert.equal(ta.code, 200, JSON.stringify(ta.body));
     assert.equal(ta.body.license_type, 'trial');
     assert.ok(verifyV2(ta, { serial: t.body.serial_key, hwid: hwidT, nonce: 'n-trial' }));
+});
+
+// ── DAW RECORDER ─────────────────────────────────────────────────────────────────────────────────────────────────
+test('DAW RECORDER: prefijo REC, prueba de 3 días, firma v2 y exclusiva (no sirve en otros plugins ni al revés)', async () => {
+    const R = await import('../src/shared/config/pluginRegistry.js');
+    assert.equal(R.prefixForName('DAW RECORDER'), 'REC');
+    assert.equal(R.prefixForName('daw-recorder'), 'REC');
+    assert.equal(R.findPluginBySerial('REC-FULL-AB12CD34-EF56AB78').id, 'daw-recorder');
+    assert.equal(R.extractSerial('DAW RECORDER: rec-trial-ab12cd34-ef56ab78'), 'REC-TRIAL-AB12CD34-EF56AB78');
+    assert.equal(R.isProductOfPlugin('daw-recorder', { id: 7788, name: 'x' }), true);
+    assert.equal(R.isProductOfPlugin('daw-recorder', { name: 'DAW RECORDER (Windows)' }), true);
+    assert.equal(R.isProductOfPlugin('daw-recorder', { id: 899, name: 'Easy Mix' }), false);
+    // otros plugins no se confunden con DAW RECORDER
+    assert.equal(R.findPluginByName('OFFSZN Rack').id, 'offszn-rack');
+    assert.equal(R.findPluginByName('Easy Master').id, 'easy-master');
+
+    const key = await newKey('DAW RECORDER');
+    assert.match(key, /^REC-FULL-[A-F0-9]{8}-[A-F0-9]{8}$/);
+    const hwid = HW('PC-WILLIE', DEV_A), nonce = 'n-rec';
+    const ok = await call(C.activateSerial, { serial_key: key, hwid, plugin_name: 'DAW RECORDER', nonce });
+    assert.equal(ok.code, 200, JSON.stringify(ok.body));
+    assert.ok(verifyV2(ok, { serial: key, hwid, nonce }));
+    const v = await call(C.validateLicense, { serial_key: key, hwid, plugin_name: 'DAW RECORDER', nonce: 'n-rec-2' });
+    assert.equal(v.code, 200, JSON.stringify(v.body));
+    for (const other of ['Easy Clean', 'Easy Pitch', 'EASY MIX', 'Omni Plugin', 'GHOST', 'Cassette', 'OFFSZN Widget']) {
+        const r = await call(C.activateSerial, { serial_key: key, hwid, plugin_name: other });
+        assert.equal(r.code, 403, `REC no debe activarse en ${other}`); assert.equal(r.body.code, 'wrong_product');
+    }
+    const ghost = await newKey('GHOST');
+    const x = await call(C.activateSerial, { serial_key: ghost, hwid, plugin_name: 'DAW RECORDER' });
+    assert.equal(x.code, 403); assert.equal(x.body.code, 'wrong_product');
+
+    const hwidT = HW('PC-NUEVO', DEV_C);
+    const t = await call(C.requestTrial, { hwid: hwidT, device_name: 'PC-NUEVO', plugin_name: 'DAW RECORDER' });
+    assert.equal(t.code, 200, JSON.stringify(t.body));
+    assert.match(t.body.serial_key, /^REC-TRIAL-[A-F0-9]{8}-[A-F0-9]{8}$/);
+    const ta = await call(C.activateSerial, { serial_key: t.body.serial_key, hwid: hwidT, plugin_name: 'DAW RECORDER', nonce: 'n-trial-rec' });
+    assert.equal(ta.code, 200, JSON.stringify(ta.body));
+    assert.equal(ta.body.license_type, 'trial');
+    assert.ok(verifyV2(ta, { serial: t.body.serial_key, hwid: hwidT, nonce: 'n-trial-rec' }));
 });
 
 test('admin: si el panel manda un serial con el prefijo de otro plugin, el servidor lo corrige', async () => {

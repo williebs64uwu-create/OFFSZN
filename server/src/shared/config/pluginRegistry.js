@@ -43,13 +43,16 @@ export const PLUGINS = [
     // La app manda plugin_name = 'OFFSZN Widget' en /request-trial, /activate y /validate.
     // STAR CHAIN (agente de mezcla vocal STAR): IDs de tienda con STAR_PRODUCT_IDS (coma-separados) cuando exista en `products`.
     { id: 'star-chain', prefix: 'STAR', displayName: 'STAR CHAIN', names: ['star chain', 'starchain'], keywords: ['star chain', 'starchain'], productIds: idsFromEnv('STAR_PRODUCT_IDS').length ? idsFromEnv('STAR_PRODUCT_IDS') : [5003], trialDays: 3, exclusive: true },
+    // DAW RECORDER (graba la ventana del DAW + audio master a MP4 vertical; solo Windows; 5 USD): IDs de tienda con REC_PRODUCT_IDS (coma-separados) cuando exista en `products`.
+    // El plugin manda plugin_name = 'DAW RECORDER' en /request-trial, /activate y /validate. Palabras clave específicas a propósito («recorder» suelto no).
+    { id: 'daw-recorder', prefix: 'REC', displayName: 'DAW RECORDER', names: ['daw recorder', 'dawrecorder', 'offszn daw recorder'], keywords: ['daw recorder', 'dawrecorder'], productIds: idsFromEnv('REC_PRODUCT_IDS'), trialDays: 3, exclusive: true },
     { id: 'offszn-widget', prefix: 'WIDGET', displayName: 'OFFSZN Widget', names: ['offszn widget', 'widget'], keywords: ['widget'], productIds: idsFromEnv('WIDGET_PRODUCT_IDS').length ? idsFromEnv('WIDGET_PRODUCT_IDS') : [5004], trialDays: 3, exclusive: true }
 ];
 
 export const DEFAULT_PLUGIN = PLUGINS[0]; // Easy Mix: comportamiento histórico cuando no se indica plugin
 
 // Orden de evaluación de palabras clave: los específicos primero ("Easy Master"/"Easy Pitch" contienen "easy"; "mix" va al final)
-const KEYWORD_ORDER = ['offszn-rack', 'omni', 'ghost', 'star-chain', 'offszn-widget', 'cassette', 'clyra', 'synora', 'orb', 'easy-clean', 'easy-deeser', 'easy-level', 'easy-pitch', 'easy-master', 'coca-cola', 'inka-kola', 'vocal-preset', 'easy-mix'];
+const KEYWORD_ORDER = ['offszn-rack', 'omni', 'ghost', 'daw-recorder', 'star-chain', 'offszn-widget', 'cassette', 'clyra', 'synora', 'orb', 'easy-clean', 'easy-deeser', 'easy-level', 'easy-pitch', 'easy-master', 'coca-cola', 'inka-kola', 'vocal-preset', 'easy-mix'];
 
 export function normalizeName(name) {
     return String(name || '').toLowerCase().replace(/[-_]+/g, ' ').replace(/\s+/g, ' ').trim();
