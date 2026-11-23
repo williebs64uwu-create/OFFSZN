@@ -33,6 +33,7 @@ import analyzerRoutes from './infrastructure/http/routes/analyzer.routes.js';
 import pluginLicensingRoutes from './infrastructure/http/routes/plugin-licensing.routes.js';
 import deviceAuthRoutes from './infrastructure/http/routes/device-auth.routes.js';
 import beatpostRoutes from './infrastructure/http/routes/beatpost.routes.js';
+import polarTestRoutes from './infrastructure/http/routes/polar-test.routes.js';
 import cokeCheckoutRoutes from './infrastructure/http/routes/coke-checkout.routes.js';
 import promo2x1CheckoutRoutes from './infrastructure/http/routes/promo2x1-checkout.routes.js';
 import calendarRoutes from './infrastructure/http/routes/calendar.routes.js';
@@ -385,6 +386,7 @@ app.use('/api/imagekit', imagekitRoutes);
 app.use('/api', paypalRoutes);
 app.use('/api/orders/yape', yapeRoutes);
 app.use('/api', willieRoutes); // Willie Inspired dedicated checkout
+app.use('/api', polarTestRoutes); // Prueba aislada Polar (STAR CHAIN)
 app.use('/api', cokeCheckoutRoutes);  // Isolated Coca-Cola checkout (no multi-payee)
 app.use('/api', promo2x1CheckoutRoutes); // Isolated Promo 2x1 checkout (guaranteed 2 licenses)
 app.use('/api', youtubeRoutes);
