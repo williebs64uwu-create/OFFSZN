@@ -27,17 +27,28 @@ router.post('/polar-test/checkout', limiter, async (req, res) => {
 
     const email = typeof req.body?.email === 'string' && /^\S+@\S+\.\S+$/.test(req.body.email) ? req.body.email.trim() : undefined;
     const origin = process.env.SITE_URL || `https://${req.get('host')}`;
+    // Origen que abrirá el checkout embebido: solo dominios propios (el navegador no lo elige libremente).
+    const allowed = new Set([origin, 'https://offszn.lat', 'https://www.offszn.lat', ...String(process.env.POLAR_EMBED_ORIGINS || '').split(',').map((s) => s.trim()).filter(Boolean)]);
+    const reqOrigin = req.get('origin');
+    const embedOrigin = reqOrigin && allowed.has(reqOrigin) ? reqOrigin : origin;
+    // Polar elige la moneda por la IP; desde el servidor verían la de Vercel, así que pasamos la del cliente.
+    const clientIp = String(req.headers['x-forwarded-for'] || req.ip || '').split(',')[0].trim() || undefined;
+    const create = (customerEmail) => fetch(`${apiBase()}/v1/checkouts/`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            products: [productId],
+            success_url: `${origin}${item.successPath || '/polar-test'}?polar=success&status=success&checkout_id={CHECKOUT_ID}`,
+            embed_origin: embedOrigin,
+            customer_ip_address: clientIp,
+            customer_email: customerEmail,
+            metadata: { source: 'polar-test', product: String(req.body.product) }
+        })
+    });
     try {
-        const r = await fetch(`${apiBase()}/v1/checkouts/`, {
-            method: 'POST',
-            headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                products: [productId],
-                success_url: `${origin}/polar-test?status=success&checkout_id={CHECKOUT_ID}`,
-                customer_email: email,
-                metadata: { source: 'polar-test', product: String(req.body.product) }
-            })
-        });
+        let r = await create(email);
+        // Polar valida que el dominio del correo exista; si lo rechaza (ej. typo), reintentamos sin correo y lo escribe en el pago.
+        if (!r.ok && email) r = await create(undefined);
         const data = await r.json().catch(() => ({}));
         if (!r.ok || !data.url) {
             console.error('[polar-test] Polar respondió', r.status, JSON.stringify(data).slice(0, 300));
