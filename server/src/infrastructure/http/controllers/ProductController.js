@@ -56,6 +56,9 @@ export const getAllProducts = async (req, res) => {
             };
         });
 
+        // Lista pública: Vercel la guarda 60 s (y sirve la anterior mientras refresca) para no
+        // pegarle a la función y a la base de datos en cada visita. No cambia el contenido.
+        res.setHeader('Cache-Control', 'public, max-age=0, s-maxage=60, stale-while-revalidate=120');
         res.status(200).json(formattedData);
 
     } catch (err) {
