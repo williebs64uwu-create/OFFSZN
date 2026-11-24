@@ -534,30 +534,85 @@
         }
 
         /* 5 Front-Facing Artist Cards */
-        .artists-grid-front {
-            display: grid;
-            grid-template-columns: repeat(5, 1fr);
-            gap: 12px;
+        .artists-carousel {
+            position: relative;
             width: 100%;
         }
 
+        .artists-grid-front {
+            position: relative;
+            display: flex;
+            gap: 12px;
+            width: 100%;
+            overflow-x: auto;
+            scroll-snap-type: x mandatory;
+            scroll-behavior: smooth;
+            -webkit-overflow-scrolling: touch;
+            scrollbar-width: none;
+            padding: 4px 2px 8px;
+        }
+        .artists-grid-front::-webkit-scrollbar {
+            display: none;
+        }
+        .artists-grid-front .artist-card-front {
+            flex: 0 0 calc((100% - 48px) / 5);
+            scroll-snap-align: start;
+        }
+
+        /* Flechas < > para ver más artistas */
+        .artists-arrow {
+            position: absolute;
+            top: 42%;
+            transform: translateY(-50%);
+            width: 34px;
+            height: 34px;
+            border-radius: 50%;
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            background: rgba(18, 21, 29, 0.94);
+            color: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            z-index: 3;
+            padding: 0;
+            font-size: 15px;
+            box-shadow: 0 6px 18px rgba(0, 0, 0, 0.35);
+            transition: opacity 0.2s ease, background 0.2s ease, border-color 0.2s ease;
+        }
+        .artists-arrow:hover {
+            background: #1c2030;
+            border-color: rgba(255, 210, 74, 0.6);
+        }
+        .artists-arrow.prev { left: -14px; }
+        .artists-arrow.next { right: -14px; }
+        .artists-arrow[disabled] {
+            opacity: 0;
+            pointer-events: none;
+        }
+
         @media (max-width: 900px) {
-            .artists-grid-front {
-                display: flex;
-                overflow-x: auto;
-                scroll-snap-type: x mandatory;
-                gap: 12px;
-                padding-bottom: 8px;
-                -webkit-overflow-scrolling: touch;
-                scrollbar-width: none;
-            }
-            .artists-grid-front::-webkit-scrollbar {
-                display: none;
-            }
-            .artist-card-front {
+            .artists-grid-front .artist-card-front {
                 flex: 0 0 115px;
-                scroll-snap-align: start;
             }
+            .artists-arrow { display: none; }
+        }
+
+        .player-track-note {
+            margin: 2px 0 0;
+            font-size: 11.5px;
+            color: rgba(255, 255, 255, 0.55);
+            letter-spacing: 0.02em;
+        }
+
+        .player-wave-bar.is-empty {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .star-player-panel.no-demo .player-circle-play-btn {
+            opacity: 0.4;
+            cursor: default;
+            box-shadow: none;
         }
 
         .artist-card-front {
@@ -2819,30 +2874,13 @@
                 </div>
 
                 <!-- 5 FRONT-FACING ARTIST CARDS -->
-                <div class="artists-grid-front">
-                    
-                    <!-- 1. ZUHK -->
-                    <div class="artist-card-front active" id="card-zuhk" onclick="selectArtist('zuhk', true)">
-                        <div class="artist-card-img-wrap">
-                            <img src="/images/plugins/star-chain/cover_zuhk.jpg" alt="ZUHK">
-                        </div>
-                        <div class="artist-card-info">
-                            <span class="artist-card-name">ZUHK</span>
-                        </div>
-                    </div>
+                <div class="artists-carousel">
+                <button type="button" class="artists-arrow prev" id="artistsPrev" onclick="scrollArtists(-1)" aria-label="Artistas anteriores" disabled><i class="bi bi-chevron-left"></i></button>
+                <button type="button" class="artists-arrow next" id="artistsNext" onclick="scrollArtists(1)" aria-label="Más artistas"><i class="bi bi-chevron-right"></i></button>
+                <div class="artists-grid-front" id="artistsGrid">
 
-                    <!-- 2. JOVAAN -->
-                    <div class="artist-card-front" id="card-jovaan" onclick="selectArtist('jovaan', true)">
-                        <div class="artist-card-img-wrap">
-                            <img src="/images/plugins/star-chain/cover_jovaan.jpg" alt="JOVAAN">
-                        </div>
-                        <div class="artist-card-info">
-                            <span class="artist-card-name">JOVAAN</span>
-                        </div>
-                    </div>
-
-                    <!-- 3. FEID -->
-                    <div class="artist-card-front" id="card-feid" onclick="selectArtist('feid', true)">
+                    <!-- 1. FEID -->
+                    <div class="artist-card-front active" id="card-feid" onclick="selectArtist('feid', true)">
                         <div class="artist-card-img-wrap">
                             <img src="/images/plugins/star-chain/cover_feid.jpg" alt="FEID">
                         </div>
@@ -2851,13 +2889,33 @@
                         </div>
                     </div>
 
-                    <!-- 4. BLAGH -->
+                    <!-- 2. ROA -->
+                    <div class="artist-card-front" id="card-roa" onclick="selectArtist('roa', true)">
+                        <div class="artist-card-img-wrap">
+                            <img src="https://ik.imagekit.io/6gzqp4xam/star-chain/cover_roa.webp?tr=w-300,h-300,q-80,f-auto" alt="ROA" loading="lazy" decoding="async" width="300" height="300">
+                        </div>
+                        <div class="artist-card-info">
+                            <span class="artist-card-name">ROA</span>
+                        </div>
+                    </div>
+
+                    <!-- 3. BLAGH -->
                     <div class="artist-card-front" id="card-blagh" onclick="selectArtist('blagh', true)">
                         <div class="artist-card-img-wrap">
                             <img src="/images/plugins/star-chain/cover_blagh.jpg" alt="BLAGH">
                         </div>
                         <div class="artist-card-info">
                             <span class="artist-card-name">BLAGH</span>
+                        </div>
+                    </div>
+
+                    <!-- 4. JUICE WRLD -->
+                    <div class="artist-card-front" id="card-juice" onclick="selectArtist('juice', true)">
+                        <div class="artist-card-img-wrap">
+                            <img src="https://ik.imagekit.io/6gzqp4xam/star-chain/cover_juice_wrld.webp?tr=w-300,h-300,q-80,f-auto" alt="JUICE WRLD" loading="lazy" decoding="async" width="300" height="300">
+                        </div>
+                        <div class="artist-card-info">
+                            <span class="artist-card-name">JUICE WRLD</span>
                         </div>
                     </div>
 
@@ -2871,6 +2929,27 @@
                         </div>
                     </div>
 
+                    <!-- 6. JOVAAN -->
+                    <div class="artist-card-front" id="card-jovaan" onclick="selectArtist('jovaan', true)">
+                        <div class="artist-card-img-wrap">
+                            <img src="/images/plugins/star-chain/cover_jovaan.jpg" alt="JOVAAN" loading="lazy" decoding="async">
+                        </div>
+                        <div class="artist-card-info">
+                            <span class="artist-card-name">JOVAAN</span>
+                        </div>
+                    </div>
+
+                    <!-- 7. ZUHK -->
+                    <div class="artist-card-front" id="card-zuhk" onclick="selectArtist('zuhk', true)">
+                        <div class="artist-card-img-wrap">
+                            <img src="/images/plugins/star-chain/cover_zuhk.jpg" alt="ZUHK" loading="lazy" decoding="async">
+                        </div>
+                        <div class="artist-card-info">
+                            <span class="artist-card-name">ZUHK</span>
+                        </div>
+                    </div>
+
+                </div>
                 </div>
 
                 <!-- DIRECT AUDIO PLAYER DEBAJO -->
@@ -2879,15 +2958,11 @@
                     <!-- Track Details Row -->
                     <div class="player-top-row">
                         <div class="player-track-meta">
-                            <img src="/images/plugins/star-chain/cover_zuhk.jpg" alt="Cover" class="player-avatar-thumb" id="playerThumb">
+                            <img src="/images/plugins/star-chain/cover_feid.jpg" alt="Cover" class="player-avatar-thumb" id="playerThumb">
                             <div class="player-track-info">
-                                <h4 id="playerTrackTitle">ZUHK <i class="bi bi-patch-check-fill" style="color: #ffd24a; font-size: 13px;"></i></h4>
-                                <p id="playerTrackSubtitle" style="display: none;"></p>
+                                <h4 id="playerTrackTitle">FEID <i class="bi bi-patch-check-fill" style="color: #ffd24a; font-size: 13px;"></i></h4>
+                                <p id="playerTrackSubtitle" class="player-track-note" style="display: none;"></p>
                             </div>
-                        </div>
-                        <div class="player-tag-pill">
-                            <i class="bi bi-cpu-fill" style="color: #ffd24a;"></i>
-                            <span>0.0 ms Latency</span>
                         </div>
                     </div>
 
@@ -2924,9 +2999,6 @@
                             <button type="button" class="player-vol-btn" id="playerMuteBtn" onclick="toggleMute()" title="Silenciar / Activar sonido">
                                 <i class="bi bi-volume-up-fill" id="playerVolIcon"></i>
                             </button>
-                            <div class="player-status-badge">
-                                <span id="playerDspStatus">DSP Activo</span>
-                            </div>
                         </div>
                     </div>
 
@@ -4455,17 +4527,25 @@
         // Audio served via server proxy (presigned R2 redirect, free unlimited bandwidth)
         const R2_BASE = '/api/r2-public';
 
+        // src: null = todavía no hay audio de demo (se muestra la portada y un aviso, sin botón de play)
+        const IK_COVERS = 'https://ik.imagekit.io/6gzqp4xam/star-chain';
         const ARTIST_TRACKS = {
-            zuhk:  { name: 'ZUHK',   genre: 'Trap & Drill',   subtitle: 'Cadena vocal Trap & Drill · Procesada con STAR CHAIN',   cover: '/images/plugins/star-chain/cover_zuhk.jpg',   src: `${R2_BASE}/star-chain/audio/zuhk.mp3?v=v2`  },
-            jovaan:{ name: 'JOVAAN', genre: 'Dancehall',      subtitle: 'Cadena Dancehall suave · Procesada con STAR CHAIN',       cover: '/images/plugins/star-chain/cover_jovaan.jpg', src: `${R2_BASE}/star-chain/audio/jovaan.mp3?v=v2` },
             feid:  { name: 'FEID',   genre: 'Perreo & Aire',  subtitle: 'Cadena vocal Perreo · Procesada con STAR CHAIN',          cover: '/images/plugins/star-chain/cover_feid.jpg',   src: `${R2_BASE}/star-chain/audio/feid.mp3?v=v2`   },
+            roa:   { name: 'ROA',    genre: 'Urbano',         subtitle: 'Demo de audio muy pronto',                                cover: `${IK_COVERS}/cover_roa.webp?tr=w-96,h-96,q-80,f-auto`,        src: null },
             blagh: { name: 'BLAGH',  genre: 'Urbano / Pop',   subtitle: 'Cadena vocal Urbana · Procesada con STAR CHAIN',         cover: '/images/plugins/star-chain/cover_blagh.jpg',  src: `${R2_BASE}/star-chain/audio/blagh.mp3?v=v2`  },
+            juice: { name: 'JUICE WRLD', genre: 'Melodic',    subtitle: 'Demo de audio muy pronto',                                cover: `${IK_COVERS}/cover_juice_wrld.webp?tr=w-96,h-96,q-80,f-auto`, src: null },
             s4nx:  { name: 'S4NX',   genre: 'Melodic Trap',  subtitle: 'Cadena Melodic Trap · Procesada con STAR CHAIN',         cover: '/images/plugins/star-chain/cover_s4nx.jpg',   src: `${R2_BASE}/star-chain/audio/s4nx.mp3?v=v2`   },
+            jovaan:{ name: 'JOVAAN', genre: 'Dancehall',      subtitle: 'Cadena Dancehall suave · Procesada con STAR CHAIN',       cover: '/images/plugins/star-chain/cover_jovaan.jpg', src: `${R2_BASE}/star-chain/audio/jovaan.mp3?v=v2` },
+            zuhk:  { name: 'ZUHK',   genre: 'Trap & Drill',   subtitle: 'Cadena vocal Trap & Drill · Procesada con STAR CHAIN',   cover: '/images/plugins/star-chain/cover_zuhk.jpg',   src: `${R2_BASE}/star-chain/audio/zuhk.mp3?v=v2`  },
         };
-        const ARTIST_ORDER = ['zuhk', 'jovaan', 'feid', 'blagh', 's4nx'];
+        const ARTIST_ORDER = ['feid', 'roa', 'blagh', 'juice', 's4nx', 'jovaan', 'zuhk'];
+
+        // Forma de onda REAL de cada demo (72 valores de volumen, sacados del audio con ffmpeg)
+        const ARTIST_PEAKS = {"zuhk":[6,6,12,53,94,96,90,63,33,59,52,97,60,56,84,59,58,82,52,80,83,56,93,100,89,73,44,30,70,64,70,65,89,94,25,92,68,65,75,62,81,30,80,30,79,93,92,83,32,85,92,94,85,60,25,16,14,11,9,10,10,10,8,6,6,6,6,6,6,6,6,6],"jovaan":[6,60,80,91,95,100,86,85,57,62,83,81,45,84,81,79,80,70,87,98,94,85,84,90,66,24,19,21,46,86,71,72,94,78,20,80,85,75,77,61,83,88,86,85,84,83,63,17,17,38,29,89,91,54,87,79,24,80,87,79,72,74,71,75,78,78,80,78,78,63,24,23],"feid":[58,81,70,95,57,11,7,55,88,75,72,83,85,64,85,98,81,88,46,61,68,39,8,6,64,63,83,91,79,86,73,82,83,90,91,55,58,76,41,9,6,64,64,42,82,86,80,92,67,71,89,77,48,51,70,54,51,89,50,100,85,63,79,75,82,72,63,88,58,62,81,54],"blagh":[41,88,68,61,56,64,70,64,96,63,71,66,65,79,67,72,71,62,75,74,79,82,96,71,56,64,61,66,76,40,59,65,79,43,86,100,70,72,76,68,52,53,57,42,88,71,42,68,51,57,77,61,63,64,56,77,60,56,65,72,71,91,72,10,9,6,6,6,6,6,6,6],"s4nx":[6,6,91,66,76,84,76,85,82,18,17,18,57,68,91,73,62,74,71,88,63,93,93,68,100,68,13,54,67,46,60,67,72,57,89,89,84,85,84,82,58,98,58,16,78,61,50,74,79,76,83,73,95,94,88,90,87,63,100,84,20,19,18,16,11,9,13,13,8,7,6,6]};
 
         let playerAudio = null;
-        let playerCurrentId = 'zuhk';
+        let playerCurrentId = 'feid';
+        let playerBarCount = 0;
         let playerIsPlaying = false;
         function activarAudioDemo() {
             const v = document.getElementById('starDemoVideo');
@@ -4511,21 +4591,56 @@
             return playerAudio;
         }
 
-        function generatePlayerBars() {
-            if (playerBarsGenerated) return;
+        // Dibuja la forma de onda real del artista (si no hay audio, barras bajas y apagadas)
+        function generatePlayerBars(id) {
             const canvas = document.getElementById('playerBarsCanvas');
             if (!canvas) return;
-            const NUM_BARS = 44;
-            const heights = [30,45,60,38,70,55,80,42,65,50,75,35,88,52,40,68,82,30,55,72,44,60,85,38,50,70,42,66,78,35,55,45,80,36,62,74,48,56,86,32,60,70,44,58];
+            const key = id || playerCurrentId;
+            const peaks = ARTIST_PEAKS[key];
+            const width = canvas.clientWidth || 600;
+            const NUM_BARS = width < 420 ? 36 : (width < 620 ? 54 : 72);
             canvas.innerHTML = '';
             for (let i = 0; i < NUM_BARS; i++) {
                 const bar = document.createElement('div');
                 bar.className = 'player-wave-bar';
                 bar.id = `pbar-${i}`;
-                bar.style.height = `${heights[i] || 40}%`;
+                if (peaks) {
+                    // promedio de los valores reales que caen en esta barra
+                    const a = Math.floor((i * peaks.length) / NUM_BARS);
+                    const b = Math.max(a + 1, Math.floor(((i + 1) * peaks.length) / NUM_BARS));
+                    let sum = 0;
+                    for (let k = a; k < b; k++) sum += peaks[k];
+                    bar.style.height = `${Math.max(8, Math.round(sum / (b - a)))}%`;
+                } else {
+                    bar.classList.add('is-empty');
+                    bar.style.height = '14%';
+                }
                 canvas.appendChild(bar);
             }
+            playerBarCount = NUM_BARS;
             playerBarsGenerated = true;
+        }
+
+        // Flechas < > del carrusel de artistas
+        function updateArtistsArrows() {
+            const g = document.getElementById('artistsGrid');
+            const p = document.getElementById('artistsPrev');
+            const n = document.getElementById('artistsNext');
+            if (!g || !p || !n) return;
+            p.disabled = g.scrollLeft <= 4;
+            n.disabled = g.scrollLeft + g.clientWidth >= g.scrollWidth - 4;
+        }
+        function scrollArtists(dir) {
+            const g = document.getElementById('artistsGrid');
+            if (!g) return;
+            g.scrollBy({ left: dir * g.clientWidth * 0.8, behavior: 'smooth' });
+        }
+        function centerArtistCard(id) {
+            const g = document.getElementById('artistsGrid');
+            const c = document.getElementById(`card-${id}`);
+            if (!g || !c) return;
+            const left = c.offsetLeft - (g.clientWidth - c.offsetWidth) / 2;
+            g.scrollTo({ left: Math.max(0, left), behavior: 'smooth' });
         }
 
         function selectArtist(id, forcePlay = null) {
@@ -4545,16 +4660,33 @@
             const title = document.getElementById('playerTrackTitle');
             if (title) title.innerHTML = `${track.name} <i class="bi bi-patch-check-fill" style="color:#ffd24a;font-size:13px;"></i>`;
 
+            // Aviso solo cuando todavía no hay audio de demo de ese artista
             const sub = document.getElementById('playerTrackSubtitle');
-            if (sub) sub.textContent = track.subtitle;
+            if (sub) {
+                sub.textContent = track.subtitle;
+                sub.style.display = track.src ? 'none' : 'block';
+            }
 
-            const dsp = document.getElementById('playerDspStatus');
-            if (dsp) dsp.textContent = 'DSP Activo';
-
-            generatePlayerBars();
+            generatePlayerBars(id);
             resetPlayerProgressUI();
+            centerArtistCard(id);
+            const panelEl = document.getElementById('starPlayerPanel');
+            if (panelEl) panelEl.classList.toggle('no-demo', !track.src);
 
             const audio = getOrCreatePlayerAudio();
+
+            // Sin audio: se queda la portada, se detiene lo anterior y no hay play
+            if (!track.src) {
+                audio.pause();
+                playerIsPlaying = false;
+                updatePlayBtn(false);
+                const panel = document.getElementById('starPlayerPanel');
+                if (panel) panel.classList.remove('is-playing');
+                const total = document.getElementById('playerTotalTime');
+                if (total) total.textContent = '0:00';
+                return;
+            }
+
             const shouldPlay = (forcePlay !== null) ? forcePlay : playerIsPlaying;
 
             if (shouldPlay) {
@@ -4583,9 +4715,10 @@
         }
 
         function togglePlayAudio() {
-            generatePlayerBars();
             const audio = getOrCreatePlayerAudio();
             const track = ARTIST_TRACKS[playerCurrentId];
+            if (!track.src) return; // todavía sin demo de audio
+            if (!playerBarCount) generatePlayerBars();
 
             if (!playerIsPlaying) {
                 // If src not set or different, set it
@@ -4631,7 +4764,7 @@
             }
 
             // Animate waveform bars
-            const numBars = 44;
+            const numBars = playerBarCount || 44;
             const activeBars = Math.floor((pct / 100) * numBars);
             for (let i = 0; i < numBars; i++) {
                 const b = document.getElementById(`pbar-${i}`);
@@ -4647,7 +4780,7 @@
             if (fill) fill.style.width = '0%';
             const cur = document.getElementById('playerCurrentTime');
             if (cur) cur.textContent = '0:00';
-            for (let i = 0; i < 44; i++) {
+            for (let i = 0; i < (playerBarCount || 44); i++) {
                 const b = document.getElementById(`pbar-${i}`);
                 if (b) b.classList.remove('played', 'playing-anim');
             }
@@ -4680,6 +4813,10 @@
         // Init bars on load
         window.addEventListener('DOMContentLoaded', () => {
             generatePlayerBars();
+            updateArtistsArrows();
+            const grid = document.getElementById('artistsGrid');
+            if (grid) grid.addEventListener('scroll', updateArtistsArrows, { passive: true });
+            window.addEventListener('resize', () => { generatePlayerBars(); updateArtistsArrows(); });
         });
 
         // Video demo: arranca solo al verse (sin sonido) y se pausa al salir
