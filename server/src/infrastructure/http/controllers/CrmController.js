@@ -10,6 +10,7 @@ import { buildSalesReport, buildProductPrices, classify } from '../../../shared/
 import { parsePayhipPlugins } from '../../../shared/store/payhip.js';
 import { recordIncome, getSettings, incomeSince } from '../../services/financeService.js';
 import { incomeAsOrders } from '../../../shared/store/finance.js';
+import { salesHealth, sendTestEmail } from '../../services/salesHealthService.js';
 
 const clip = (v, n) => String(v ?? '').slice(0, n).trim();
 const email = (v) => clip(v, 200).toLowerCase();
@@ -338,4 +339,16 @@ export const payhipImport = async (req, res) => {
     const { error } = await supabase.from('store_payhip_sales').upsert(parsed.rows, { onConflict: 'order_id', ignoreDuplicates: true });
     if (error) return fail(res, error.code === '42P01' || /store_payhip_sales/.test(error.message) ? 'Falta crear la tabla store_payhip_sales (migración 20261025).' : error);
     return res.json({ imported: parsed.rows.length, mixed: parsed.rows.filter((r) => r.mixed).length, totalOrders: parsed.totalOrders, ignoredOrders: parsed.ignoredOrders });
+};
+
+// ─── GET /admin/sales-health → "Prueba de ventas": ¿cada venta llegó hasta licencia, finanzas y correo?
+export const salesHealthCheck = async (req, res) => {
+    try { return res.json(await salesHealth({ days: Math.min(30, Math.max(1, Number(req.query.days) || 14)) })); }
+    catch (err) { console.error('[CRM sales-health]', err); return fail(res, 'No se pudo revisar las ventas'); }
+};
+
+// ─── POST /admin/test-email → manda un correo real por Brevo a tu correo
+export const testEmail = async (req, res) => {
+    try { return res.json({ ok: true, ...(await sendTestEmail()) }); }
+    catch (err) { console.error('[CRM test-email]', err.message); return fail(res, err.status ? err.message : `El correo no salió: ${err.message}`, err.status || 502); }
 };

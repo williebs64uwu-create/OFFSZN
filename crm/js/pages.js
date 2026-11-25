@@ -440,4 +440,38 @@
             };
         }
     };
+
+    // ══ Prueba de ventas: ¿cada venta llegó hasta licencia, finanzas y correo? ═══════════════════════════════
+    C.pages.pruebas = {
+        async render(view, token) {
+            const days = C.state.healthDays || 14;
+            view.innerHTML = `${head('Prueba de ventas', 'Revisa en vivo que cada venta llegue completa: cobro → licencia → finanzas → correo.', '')}<div class="card"><div class="card__body muted">Revisando PayPal, la base y Brevo…</div></div>`;
+            const h = await api(`/admin/sales-health?days=${days}`);
+            if (token !== C.state.routeToken) return;
+            const dot = { ok: 'dot--ok', warn: 'dot--warn', bad: 'dot--bad' };
+            const label = { ok: 'Bien', warn: 'Revisar', bad: 'Falla' };
+            const badge = { ok: 'success', warn: 'warning', bad: 'destructive' };
+            const row = (c) => `<div class="list-row"><span class="dot ${dot[c.status]}"></span><div class="grow"><b>${esc(c.name)}</b><div class="muted small">${esc(c.detail)}</div>${c.status !== 'ok' && c.fix ? `<div class="small" style="margin-top:4px">👉 ${esc(c.fix)}</div>` : ''}</div><span class="badge badge--${badge[c.status]}">${label[c.status]}</span></div>`;
+            const banner = h.status === 'ok' ? `<div class="alert alert--ok">${icon('check')}<div><b>Todo funciona.</b> Las ventas de los últimos ${h.days} días llegaron completas.</div></div>`
+                : h.status === 'warn' ? `<div class="alert alert--warn">${icon('alert')}<div><b>Funciona, pero hay cosas por revisar.</b> Mira los puntos en amarillo.</div></div>`
+                : `<div class="alert alert--bad">${icon('alert')}<div><b>Hay una falla.</b> Mira los puntos en rojo: ahí se pierde una venta, una licencia o un correo.</div></div>`;
+            const plugins = Object.entries(h.licensesByPlugin || {}).sort((a, b) => b[1] - a[1]);
+            view.innerHTML = `${head('Prueba de ventas', 'Revisa en vivo que cada venta llegue completa: cobro → licencia → finanzas → correo.',
+                `<select class="input" id="hDays" style="width:auto" aria-label="Días">${[7, 14, 30].map((d) => `<option value="${d}" ${d === h.days ? 'selected' : ''}>Últimos ${d} días</option>`).join('')}</select><button class="btn btn--outline" onclick="CRM.route()">${icon('refresh')} Revisar de nuevo</button>`)}
+                ${banner}
+                ${card({ title: 'Semáforo', body: h.checks.map(row).join('') })}
+                ${card({ title: 'Mandar un correo de prueba', desc: 'Sale por Brevo, igual que las claves de STAR CHAIN y los plugins. Llega a tu correo del informe semanal.', body: `<button class="btn btn--brand" id="mailTest">${icon('mail')} Mandarme un correo de prueba</button><div class="muted small" id="mailOut" style="margin-top:8px"></div>` })}
+                ${h.brevoFailures.length ? card({ title: 'Correos que NO llegaron', desc: 'Brevo los marcó como rebotados, bloqueados o con error. Escríbeles por otro medio.', body: h.brevoFailures.map((f) => `<div class="list-row"><div class="grow"><b>${esc(f.email)}</b><div class="muted small">${esc(f.subject || '')} · ${esc(f.date || '')}</div></div><span class="badge badge--destructive">${esc(f.event)}</span></div>`).join('') }) : ''}
+                ${card({ title: `Cuotas de STAR CHAIN (${h.star.total})`, desc: h.star.bad ? `${h.star.bad} con problema` : 'Todas completas', body: h.star.items.length ? h.star.items.map((i) => `<div class="list-row"><span class="dot ${i.ok ? 'dot--ok' : 'dot--bad'}"></span><div class="grow"><b>${esc(i.email || 'sin correo')}</b> · cuota ${i.n}<div class="muted small mono">${esc(i.serial || 'SIN LICENCIA')} · ${esc((i.paidAt || '').slice(0, 16).replace('T', ' '))}</div>${i.problems.map((p) => `<div class="small" style="color:var(--destructive,#ef4444)">✖ ${esc(p)}</div>`).join('')}</div><span class="badge badge--${i.ok ? 'success' : 'destructive'}">${i.ok ? 'Completa' : 'Falla'}</span></div>`).join('') : '<p class="muted small">No hubo cuotas en este periodo.</p>' })}
+                ${plugins.length ? card({ title: 'Licencias emitidas por plugin', desc: `Últimos ${h.days} días`, body: plugins.map(([n, c]) => `<div class="list-row"><span class="grow">${esc(n)}</span><b>${c}</b></div>`).join('') }) : ''}`;
+            document.getElementById('hDays').onchange = (e) => { C.state.healthDays = +e.target.value; C.route(); };
+            const btn = document.getElementById('mailTest');
+            btn.onclick = async () => {
+                btn.disabled = true; const out = document.getElementById('mailOut'); out.textContent = 'Enviando…';
+                try { const r = await api('/admin/test-email', { method: 'POST' }); out.textContent = `Enviado a ${r.to} en ${r.ms} ms${r.messageId ? ` · id ${r.messageId}` : ''}. Revisa tu bandeja (y spam).`; toast('Correo de prueba enviado'); }
+                catch (err) { out.textContent = `❌ ${err.message}`; toast(err.message, 'error'); }
+                btn.disabled = false;
+            };
+        }
+    };
 })();
