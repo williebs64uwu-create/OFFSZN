@@ -80,7 +80,7 @@
         ['Dinero', [['finanzas-movimientos', 'Movimientos', 'activity'], ['finanzas-ventas', 'Ventas', 'trend'], ['finanzas-metas', 'Metas', 'chart'], ['finanzas-banco', 'Banco y Yape', 'bag'], ['finanzas-paypal', 'PayPal', 'wallet']]],
         ['Clientes', [['contactos', 'Contactos', 'users'], ['oportunidades', 'Oportunidades', 'kanban'], ['analitica', 'Analítica de clientes', 'filter']]],
         ['Marketing', [['automatizaciones', 'Emails automáticos', 'mail'], ['experimentos', 'Pruebas A/B', 'flask']]],
-        ['Sistema', [['productos', 'Productos y precios', 'tag'], ['historial', 'Histórico de plugins', 'history'], ['sistema', 'Estado del sistema', 'shield']]]
+        ['Sistema', [['productos', 'Productos y precios', 'tag'], ['historial', 'Histórico de plugins', 'history'], ['pruebas', 'Prueba de ventas', 'check'], ['sistema', 'Estado del sistema', 'shield']]]
     ];
     C.navHtml = () => C.NAV.map(([label, items]) => `<div class="nav__label">${label}</div>${items.map(([k, n, ic]) => (k.startsWith('/')
         ? `<a href="${k}" target="_blank" rel="noopener">${C.icon(ic)}${n}${C.icon('ext', 'nav__ext')}</a>`

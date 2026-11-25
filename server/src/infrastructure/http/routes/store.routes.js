@@ -46,6 +46,8 @@ router.all('/cron/automations', cronAuth, async (req, res) => res.json({ ok: tru
 router.use('/admin', rateLimit({ windowMs: 15 * 60 * 1000, limit: 30, skipSuccessfulRequests: true, standardHeaders: 'draft-7', legacyHeaders: false, message: { error: 'Demasiados intentos. Prueba en 15 minutos.' } }));
 router.post('/admin/verify', rateLimit({ windowMs: 15 * 60 * 1000, limit: 8, skipSuccessfulRequests: true, standardHeaders: 'draft-7', legacyHeaders: false, message: { error: 'Demasiados intentos. Prueba en 15 minutos.' } }), adminAuth, crm.verify);
 router.get('/admin/system', adminAuth, crm.system);
+router.get('/admin/sales-health', adminAuth, crm.salesHealthCheck);
+router.post('/admin/test-email', adminAuth, crm.testEmail);
 router.get('/admin/star-plan', adminAuth, starPlanStatus);
 router.post('/admin/star-plan', adminAuth, createPlanAdmin);
 router.get('/admin/finance', adminAuth, financeMonth);
