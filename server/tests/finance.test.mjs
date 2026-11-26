@@ -331,3 +331,17 @@ test('Envío al banco con comisión: de Yape/Ligo sale lo enviado + la comisión
     assert.equal(k.yape.now, Math.round((287.5 - 1003.54) * 100) / 100);
     assert.equal(k.bank.now, 28000);                       // 27.000 + 1.000, la comisión no llega al banco
 });
+
+test('Marketplace: la parte del productor NO se anota como tu venta aunque PayPal no mande "payee" (caso EXTRAÑOS US$ 20 + tu comisión US$ 1)', () => {
+    const cap = (id, gross, fee) => ({ id, status: 'COMPLETED', amount: { value: String(gross), currency_code: 'USD' }, seller_receivable_breakdown: { gross_amount: { value: String(gross) }, paypal_fee: { value: String(fee) }, net_amount: { value: String(gross - fee) } } });
+    const result = { purchase_units: [
+        { reference_id: 'payee_QWERTY12_ab12', payments: { captures: [cap('PROD', 20, 1.38)] } },
+        { reference_id: 'payee_MXV5F6X8_cd34', payments: { captures: [cap('MINE', 1, 0.35)] } }
+    ] };
+    const rows = paypalCaptureRows(result, { product: 'Beat' });
+    assert.deepEqual(rows.map((r) => r.ref), ['MINE']);
+    // con payee explícito sigue igual; sin reference_id ni payee (tienda/promos) todo es tuyo
+    assert.equal(paypalCaptureRows({ purchase_units: [{ payee: { merchant_id: 'OTRO' }, payments: { captures: [cap('X', 5, 0.5)] } }] }).length, 0);
+    assert.equal(paypalCaptureRows({ purchase_units: [{ payee: { merchant_id: 'MXV5F6X8JXG4S' }, payments: { captures: [cap('Y', 5, 0.5)] } }] }).length, 1);
+    assert.equal(paypalCaptureRows({ purchase_units: [{ reference_id: 'default', payments: { captures: [cap('Z', 17, 1.22)] } }] }).length, 1);
+});
