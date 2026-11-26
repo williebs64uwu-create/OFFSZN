@@ -327,10 +327,16 @@ export function summarize(rows = [], expenses = [], fx = FX_DEFAULT) {
 }
 
 // ─── Lo que informa PayPal al cobrar ──────────────────────────────────────────────────────────────────────────
+// En el marketplace cada productor cobra en su propia parte del pedido (reference_id "payee_<id 8>_xxxx").
+// La respuesta de captura de PayPal a veces NO trae "payee": entonces se mira el reference_id, y si no es tu parte, no cuenta.
 const ownUnit = (unit) => {
     const payee = unit?.payee;
-    if (!payee) return true;
-    return payee.merchant_id === MAIN_MERCHANT_ID || String(payee.email_address || '').toLowerCase() === MAIN_MERCHANT_EMAIL;
+    if (payee && (payee.merchant_id || payee.email_address)) {
+        return payee.merchant_id === MAIN_MERCHANT_ID || String(payee.email_address || '').toLowerCase() === MAIN_MERCHANT_EMAIL;
+    }
+    const ref = /^payee_(.{1,8})_/.exec(String(unit?.reference_id || ''));
+    if (ref) return ref[1] === MAIN_MERCHANT_ID.slice(0, 8);
+    return true; // pedidos de un solo cobrador (tienda, promos, Coca-Cola): todo es tuyo
 };
 
 // Si una parte del cobro es de un socio (Coca-Cola), el neto es solo lo que te queda a ti.
